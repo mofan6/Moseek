@@ -71,7 +71,10 @@ export default defineConfig({
       meta: { 'application-version': version },
     }),
     new rspack.CopyRspackPlugin({
-      patterns: [{ from: path.resolve(root, 'LICENSE'), to: 'LICENSE', toType: 'file' }],
+      patterns: [
+        { from: path.resolve(root, 'LICENSE'), to: 'LICENSE', toType: 'file' },
+        { from: path.resolve(root, 'src/favicon.png'), to: 'favicon.png', toType: 'file' },
+      ],
     }),
   ],
   performance: { hints: false },

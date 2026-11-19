@@ -68,15 +68,17 @@ export const request = async (
 ): Promise<Response> => {
   const headers = new Headers(init.headers)
   headers.set('X-Moseek-Pairing', pairingCode)
+  const options = {
+    ...init,
+    headers,
+    credentials: 'omit',
+    redirect: 'error',
+    cache: 'no-store',
+    targetAddressSpace: 'loopback',
+  } satisfies RequestInit & { targetAddressSpace: 'loopback' }
   let response: Response
   try {
-    response = await fetch(`${LOCAL_SERVICE}${path}`, {
-      ...init,
-      headers,
-      credentials: 'omit',
-      redirect: 'error',
-      cache: 'no-store',
-    })
+    response = await fetch(`${LOCAL_SERVICE}${path}`, options)
   } catch (error) {
     if (init.signal?.aborted) {
       throw error
