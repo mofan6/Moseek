@@ -70,6 +70,7 @@ export default defineConfig({
       scriptLoading: 'defer',
       meta: { 'application-version': version },
     }),
+    new rspack.DefinePlugin({ __API_ORIGIN__: JSON.stringify('https://api.deepseek.com') }),
     new rspack.CopyRspackPlugin({
       patterns: [
         { from: path.resolve(root, 'LICENSE'), to: 'LICENSE', toType: 'file' },

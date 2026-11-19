@@ -7,9 +7,9 @@ export type Locale = 'zh-CN' | 'en-US'
 /** 主题偏好；默认跟随系统 */
 export type ThemePreference = 'light' | 'dark' | 'system'
 
-/** 本机设置，存 localStorage：本机配对码、语言、主题、位置、朗读音色、深度思考与智能搜索开关、侧边栏收起状态 */
+/** 本机设置，存 localStorage：API Key、语言、主题、位置、朗读音色、深度思考与智能搜索开关、侧边栏收起状态 */
 type Settings = {
-  pairingCode: string | null
+  apiKey: string | null
   locale: Locale
   themePreference: ThemePreference
   location: UserLocation | null
@@ -20,7 +20,7 @@ type Settings = {
 }
 
 const KEYS = {
-  pairingCode: 'moseek:pairing-code',
+  apiKey: 'moseek:api-key',
   locale: 'moseek:locale',
   location: 'moseek:location',
   themePreference: 'moseek:theme-preference',
@@ -38,14 +38,6 @@ const read = (key: string) => {
   }
 }
 
-const readPairingCode = () => {
-  try {
-    return sessionStorage.getItem(KEYS.pairingCode)
-  } catch {
-    return null
-  }
-}
-
 const write = (key: string, value: string | null) => {
   try {
     if (value === null) {
@@ -53,8 +45,9 @@ const write = (key: string, value: string | null) => {
     } else {
       localStorage.setItem(key, value)
     }
+    return true
   } catch {
-    // 存储不可用时只在内存中生效
+    return false
   }
 }
 
@@ -96,7 +89,7 @@ const initialThemePreference = (): ThemePreference => {
 const initialTtsVoice = (): TtsVoice => (read(KEYS.ttsVoice) === 'tide' ? 'tide' : 'stella')
 
 export const useSettings = create<Settings>(() => ({
-  pairingCode: readPairingCode(),
+  apiKey: read(KEYS.apiKey),
   locale: initialLocale(),
   location: initialLocation(),
   themePreference: initialThemePreference(),
@@ -127,17 +120,12 @@ export const setTtsVoice = (ttsVoice: TtsVoice) => {
   useSettings.setState({ ttsVoice })
 }
 
-export const setPairingCode = (pairingCode: string | null) => {
-  try {
-    if (pairingCode === null) {
-      sessionStorage.removeItem(KEYS.pairingCode)
-    } else {
-      sessionStorage.setItem(KEYS.pairingCode, pairingCode)
-    }
-  } catch {
-    // 存储不可用时，在当前页面内生效。
+export const setApiKey = (apiKey: string) => {
+  if (!write(KEYS.apiKey, apiKey)) {
+    return false
   }
-  useSettings.setState({ pairingCode })
+  useSettings.setState({ apiKey })
+  return true
 }
 
 export const setThinking = (thinking: boolean) => {

@@ -21,10 +21,10 @@ declare const styles: {
   readonly "themeOptionSelected": string;
   readonly "description": string;
   readonly "error": string;
-  readonly "pairingCode": string;
-  readonly "pairingCodeSaved": string;
-  readonly "pairingCodeInput": string;
-  readonly "pairingCodeMask": string;
+  readonly "apiKey": string;
+  readonly "apiKeySaved": string;
+  readonly "apiKeyInput": string;
+  readonly "apiKeyMask": string;
   readonly "divider": string;
   readonly "confirm": string;
   readonly "cellButton": string;

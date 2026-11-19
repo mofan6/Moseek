@@ -9,7 +9,7 @@ import { stopReadAloud } from '../../services/speech/readAloud.js'
 import type { UserMessage as UserMessageType } from '../../services/chat/types.js'
 import { Button } from '../base/Button.js'
 import { IconButton } from '../base/IconButton.js'
-import { ensurePairingCode } from '../settings/settingsDialogState.js'
+import { ensureApiKey } from '../settings/settingsDialogState.js'
 import {
   BranchSwitcher,
   type MessageVersions,
@@ -55,7 +55,7 @@ export const UserMessage = memo(function UserMessage({
   }, [editing, draft])
 
   const sendEdit = () => {
-    if (canSend && ensurePairingCode() && editMessage(sessionId, message.id, draft.trim())) {
+    if (canSend && ensureApiKey() && editMessage(sessionId, message.id, draft.trim())) {
       stopReadAloud()
       setEditing(false)
     }

@@ -33,12 +33,12 @@ import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
-import { PairingCodeConfirm, PairingCodeField, usePairingCodeEditor } from './PairingCodeField.js'
+import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
 
 /**
- * 设置弹窗：分「通用设置」（主题、语言、朗读音色、位置）与「数据管理」（导入、导出、删除）与「本机连接」。
+ * 设置弹窗：分「通用设置」（主题、语言、朗读音色、位置）与「数据管理」（导入、导出、删除）与「API 设置」。
  * 桌面端为居中弹窗、左侧导航；移动端为底部弹层、导航横排在内容上方
  */
 export const SettingsDialog = () => {
@@ -52,7 +52,7 @@ const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode
     label: 'settingDialogAsideGeneralOptionLabel',
     icon: <IconSettingsOutline16 />,
   },
-  { value: 'connection', label: 'localConnection', icon: <IconLinkOutline16 /> },
+  { value: 'api', label: 'apiSettings', icon: <IconLinkOutline16 /> },
   { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
 ]
 
@@ -61,8 +61,8 @@ const SettingsContent = () => {
   const isMobile = useIsMobile()
   // 打开时按调用方指定的分组选中，之后在弹窗内切换
   const [section, setSection] = useState(() => useSettingsDialog.getState().section)
-  // 切换分组不丢失正在输入的配对码 与导入状态
-  const pairingCodeEditor = usePairingCodeEditor()
+  // 切换分组不丢失正在输入的 API Key 与导入状态
+  const apiKeyEditor = useApiKeyEditor()
   const historyImport = useHistoryImport()
   const historyDelete = useHistoryDelete()
   const replacingHistory = useChatStore((state) => state.importingHistory)
@@ -103,10 +103,10 @@ const SettingsContent = () => {
               <TtsVoiceSetting />
               <LocationSetting />
             </>
-          ) : section === 'connection' ? (
+          ) : section === 'api' ? (
             <>
-              <PairingCodeField editor={pairingCodeEditor} />
-              {isMobile ? <PairingCodeConfirm editor={pairingCodeEditor} /> : null}
+              <ApiKeyField editor={apiKeyEditor} />
+              {isMobile ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
             </>
           ) : (
             <>

@@ -96,15 +96,15 @@ export const AssistantMessage = memo(function AssistantMessage({
           <IconWarningOutline16 />
           <span>
             {notice.text}
-            {notice.action === 'pairingCode' ? (
+            {notice.action === 'apiKey' ? (
               <>
                 {' '}
                 <button
                   type="button"
                   className={styles.noticeAction}
-                  onClick={() => openSettings('connection')}
+                  onClick={() => openSettings('api')}
                 >
-                  {t('changePairingCode')}
+                  {t('changeApiKey')}
                 </button>
               </>
             ) : null}

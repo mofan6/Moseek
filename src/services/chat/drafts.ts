@@ -45,10 +45,10 @@ const updateDraft = (sessionId: string | null, update: (draft: Draft) => Draft) 
 export const setDraftText = (sessionId: string | null, text: string) =>
   updateDraft(sessionId, (draft) => ({ ...draft, text }))
 
-const upload = (attachment: DraftAttachment, pairingCode: string) => {
+const upload = (attachment: DraftAttachment, apiKey: string) => {
   // 上传任务负责记录错误，输入框的附件卡片展示失败及重试入口。
   void uploadAttachment(
-    pairingCode,
+    apiKey,
     attachment.id,
     attachment.file,
     attachment.file.name,
@@ -60,7 +60,7 @@ const upload = (attachment: DraftAttachment, pairingCode: string) => {
 export const addDraftFiles = (
   sessionId: string | null,
   files: File[],
-  pairingCode: string
+  apiKey: string
 ): TranslationMessage | null => {
   if (files.length === 0) {
     return null
@@ -77,18 +77,18 @@ export const addDraftFiles = (
     })
   )
   updateDraft(sessionId, (draft) => ({ ...draft, attachments: [...draft.attachments, ...added] }))
-  added.forEach((attachment) => upload(attachment, pairingCode))
+  added.forEach((attachment) => upload(attachment, apiKey))
   return null
 }
 
 export const retryDraftAttachment = (
   sessionId: string | null,
   attachmentId: string,
-  pairingCode: string
+  apiKey: string
 ) => {
   const attachment = getDraft(sessionId).attachments.find((item) => item.id === attachmentId)
   if (attachment) {
-    upload(attachment, pairingCode)
+    upload(attachment, apiKey)
   }
 }
 

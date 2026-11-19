@@ -3,48 +3,50 @@ import { IconEditOutline16 } from '../base/icons.js'
 import { useSettings } from '../../services/settings.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { IconButton } from '../base/IconButton.js'
-import { usePairingCodeForm } from './usePairingCodeForm.js'
+import { useApiKeyForm } from './useApiKeyForm.js'
 import { useTranslate } from '../../i18n/index.js'
 import styles from './Settings.module.css'
 
-/** 本机配对码 的编辑状态：输入框与移动端底部的「确定」按钮共用 */
-export const usePairingCodeEditor = () => {
-  const pairingCode = useSettings((state) => state.pairingCode)
+/** API Key 的编辑状态：输入框与移动端底部的「确定」按钮共用 */
+export const useApiKeyEditor = () => {
+  const apiKey = useSettings((state) => state.apiKey)
   const [editing, setEditing] = useState(false)
-  const form = usePairingCodeForm(() => setEditing(false))
-  return { pairingCode, editing, setEditing, form, showInput: !pairingCode || editing }
+  const form = useApiKeyForm(() => setEditing(false))
+  return { apiKey, editing, setEditing, form, showInput: !apiKey || editing }
 }
 
-type PairingCodeEditor = ReturnType<typeof usePairingCodeEditor>
+type ApiKeyEditor = ReturnType<typeof useApiKeyEditor>
 
-/** 本机配对码：保存后只显示掩码，点编辑按钮才能重新输入 */
-export const PairingCodeField = ({ editor }: { editor: PairingCodeEditor }) => {
+/** API Key：保存后只显示掩码，点编辑按钮才能重新输入 */
+export const ApiKeyField = ({ editor }: { editor: ApiKeyEditor }) => {
   const t = useTranslate()
   const isMobile = useIsMobile()
-  const { pairingCode, editing, setEditing, form, showInput } = editor
+  const { apiKey, editing, setEditing, form, showInput } = editor
 
   return (
     <div className={styles.cell}>
-      <div className={styles.pairingCode}>
-        <div className={styles.label}>{t('pairingCodeStart')}</div>
-        <div id="pairing-code-help" className={styles.description}>{t('pairingCodeHelp')}</div>
-        {pairingCode && !editing ? (
-          <div className={styles.pairingCodeSaved}>
-            <span className={styles.pairingCodeMask}>{'•'.repeat(12)}</span>
+      <div className={styles.apiKey}>
+        <div className={styles.label}>{t('apiKeyStart')}</div>
+        <div id="api-key-help" className={styles.description}>
+          {t('apiKeyHelp')}
+        </div>
+        {apiKey && !editing ? (
+          <div className={styles.apiKeySaved}>
+            <span className={styles.apiKeyMask}>{'•'.repeat(12)}</span>
             <IconButton
               tone="primary"
               icon={<IconEditOutline16 />}
-              tooltip={t('pairingCodeEdit')}
+              tooltip={t('apiKeyEdit')}
               onClick={() => setEditing(true)}
             />
           </div>
         ) : (
-          <div className={styles.pairingCodeInput}>
+          <div className={styles.apiKeyInput}>
             <input
               type="password"
-              aria-label={t('pairingCodeStart')}
-              aria-describedby="pairing-code-help"
-              placeholder={t('pairingCodePlaceholder')}
+              aria-label={t('apiKeyStart')}
+              aria-describedby="api-key-help"
+              placeholder={t('apiKeyPlaceholder')}
               autoComplete="off"
               spellCheck={false}
               // 移动端打开设置时不弹键盘，点编辑后才聚焦
@@ -58,7 +60,7 @@ export const PairingCodeField = ({ editor }: { editor: PairingCodeEditor }) => {
               }}
               onBlur={() => {
                 // 修改时没输入就离开，回到已保存的状态
-                if (pairingCode && !form.value.trim()) {
+                if (apiKey && !form.value.trim()) {
                   setEditing(false)
                 }
               }}
@@ -74,7 +76,7 @@ export const PairingCodeField = ({ editor }: { editor: PairingCodeEditor }) => {
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => void form.submit()}
                 >
-                  {form.verifying ? t('pairingCodeVerifying') : t('confirm')}
+                  {form.verifying ? t('apiKeyVerifying') : t('confirm')}
                 </button>
               </>
             ) : null}
@@ -86,8 +88,8 @@ export const PairingCodeField = ({ editor }: { editor: PairingCodeEditor }) => {
   )
 }
 
-/** 移动端：输入 本机配对码 时在选项下方显示整行「确定」 */
-export const PairingCodeConfirm = ({ editor: { showInput, form } }: { editor: PairingCodeEditor }) => {
+/** 移动端：输入 API Key 时在选项下方显示整行「确定」 */
+export const ApiKeyConfirm = ({ editor: { showInput, form } }: { editor: ApiKeyEditor }) => {
   const t = useTranslate()
   return showInput && form.value.trim() ? (
     <button
@@ -97,7 +99,7 @@ export const PairingCodeConfirm = ({ editor: { showInput, form } }: { editor: Pa
       onMouseDown={(event) => event.preventDefault()}
       onClick={() => void form.submit()}
     >
-      {form.verifying ? t('pairingCodeVerifying') : t('confirm')}
+      {form.verifying ? t('apiKeyVerifying') : t('confirm')}
     </button>
   ) : null
 }

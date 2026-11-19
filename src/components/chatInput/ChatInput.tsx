@@ -23,7 +23,7 @@ import {
 import { stopReadAloud } from '../../services/speech/readAloud.js'
 import { IconButton } from '../base/IconButton.js'
 import { Tooltip } from '../base/Tooltip.js'
-import { ensurePairingCode } from '../settings/settingsDialogState.js'
+import { ensureApiKey } from '../settings/settingsDialogState.js'
 import { DragMask, useFileDrop } from './DragMask.js'
 import { showToast } from '../base/toastState.js'
 import { ACCEPT, useUploads } from '../../services/attachments.js'
@@ -75,18 +75,18 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   }, [t])
 
   const acceptFiles = (files: File[]) => {
-    if (files.length === 0 || useChatStore.getState().importingHistory || !ensurePairingCode()) {
+    if (files.length === 0 || useChatStore.getState().importingHistory || !ensureApiKey()) {
       return
     }
-    const error = addDraftFiles(sessionId, files, useSettings.getState().pairingCode ?? '')
+    const error = addDraftFiles(sessionId, files, useSettings.getState().apiKey ?? '')
     if (error) {
       showToast(error)
     }
   }
   const retryFile = useCallback(
     (id: string) => {
-      if (!useChatStore.getState().importingHistory && ensurePairingCode()) {
-        retryDraftAttachment(sessionId, id, useSettings.getState().pairingCode ?? '')
+      if (!useChatStore.getState().importingHistory && ensureApiKey()) {
+        retryDraftAttachment(sessionId, id, useSettings.getState().apiKey ?? '')
       }
     },
     [sessionId]
@@ -141,7 +141,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
       return
     }
     // 文本与上传完成态由提交动作读取最新快照，不使用上一次渲染的草稿。
-    if (!ensurePairingCode() || !sendMessage(sessionId)) {
+    if (!ensureApiKey() || !sendMessage(sessionId)) {
       return
     }
     stopReadAloud()
@@ -235,7 +235,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
             onClick={() => {
               if (
                 voice.status !== 'idle' ||
-                (!useChatStore.getState().importingHistory && ensurePairingCode())
+                (!useChatStore.getState().importingHistory && ensureApiKey())
               ) {
                 void voice.toggle()
               }
@@ -247,7 +247,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
             icon={<IconPaperclipOutline16 />}
             tooltip={t('uploadFile')}
             disabled={importingHistory}
-            onClick={() => ensurePairingCode() && fileInputRef.current?.click()}
+            onClick={() => ensureApiKey() && fileInputRef.current?.click()}
           />
           <input
             ref={fileInputRef}

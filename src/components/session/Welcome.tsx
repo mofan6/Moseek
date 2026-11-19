@@ -11,7 +11,7 @@ import styles from './Welcome.module.css'
 export const Welcome = () => {
   const t = useTranslate()
   const isMobile = useIsMobile()
-  const paired = useSettings((state) => state.pairingCode !== null)
+  const hasApiKey = useSettings((state) => state.apiKey !== null)
   return (
     <div className={styles.container}>
       {isMobile ? <MobileHeader /> : null}
@@ -19,9 +19,13 @@ export const Welcome = () => {
         <h1 className={styles.greeting}>{t('welcomeMessageChat250808')}</h1>
         <ChatInput sessionId={null} />
         <div className={styles.footer}>
-          <button type="button" className={styles.connection} onClick={() => openSettings('connection')}>
+          <button
+            type="button"
+            className={styles.connection}
+            onClick={() => openSettings('api')}
+          >
             <IconLinkOutline16 />
-            {t(paired ? 'localPairingSaved' : 'connectLocal')}
+            {t(hasApiKey ? 'apiKeySaved' : 'setUpApiKey')}
           </button>
         </div>
       </div>

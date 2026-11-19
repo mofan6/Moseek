@@ -1,7 +1,7 @@
 {
   "name": "moseek",
   "version": "0.1.2",
-  "description": "通过本机服务接入 DeepSeek 的聊天工作台。",
+  "description": "通过浏览器直连 DeepSeek API 的聊天工作台。",
   "license": "MIT",
   "private": true,
   "type": "module",

@@ -4,11 +4,11 @@ Moseek 是基于 [DeepSeek Chat Demo](https://github.com/deepseek-ai/chat-demo) 
 
 ## 开始聊天
 
-1. 在运行浏览器的电脑上启动配套的 Moseek 本机服务。
-2. 在网页的「设置 → 本机连接」中粘贴终端显示的配对码。Chrome 询问本地网络访问权限时，选择允许。
-3. 验证成功后发送消息。使用深度思考、智能搜索、附件或语音时，也需要保持本机服务运行。
+1. 打开 Moseek，进入「设置 → API 设置」。
+2. 输入 DeepSeek API Key 并点击「确定」。DeepSeek 校验通过后，浏览器会保存密钥。
+3. 发送消息。下次在同一浏览器资料中打开同一个网址时，Moseek 会自动读取密钥和历史对话。
 
-GitHub Pages 提供静态界面，网页只连接本机回环地址。DeepSeek API Key 和上游请求由配套本机服务处理。当前标签页记住配对码，重新打开标签页时可以再次配对。
+API Key 保存在浏览器的 localStorage，历史对话和附件保存在 IndexedDB。网页直接请求 DeepSeek API，密钥用于请求鉴权。清除该站点的浏览器数据会同时清除密钥和历史对话。
 
 ## 功能
 
@@ -21,6 +21,6 @@ GitHub Pages 提供静态界面，网页只连接本机回环地址。DeepSeek A
 
 需要 Node.js 22.12+ 和 pnpm。运行 `pnpm install --frozen-lockfile` 安装依赖，运行 `pnpm dev` 在 `http://127.0.0.1:8090` 预览。运行 `pnpm type` 检查类型，`pnpm build` 构建静态资源到 `dist/`。
 
-将仓库的 Pages 来源设为 GitHub Actions。推送至 `main` 会由 [Pages 工作流](.github/workflows/pages.yml) 构建并部署 `dist/`。如需在另一个域名使用网页，请将新来源加入配套本机服务的允许列表。
+将仓库的 Pages 来源设为 GitHub Actions。推送至 `main` 会由 [Pages 工作流](.github/workflows/pages.yml) 构建并部署 `dist/`。
 
 保留原项目的 [MIT 许可证](LICENSE)。

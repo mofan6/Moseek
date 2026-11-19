@@ -9,7 +9,12 @@ import type {
   MessageStreamEvent,
 } from './types.js'
 
-const LOCAL_SERVICE = 'http://127.0.0.1:8765'
+/** 构建期注入的 DeepSeek API 地址 */
+export const API_ORIGIN = __API_ORIGIN__
+/** Anthropic 兼容接口的前缀 */
+const ANTHROPIC_BASE_URL = `${API_ORIGIN}/anthropic/v1`
+/** 引用 Files API 上传的图片、调用 Anthropic 兼容 Files API 时必须携带 */
+const FILES_BETA = 'files-api-2025-04-14'
 
 export type ApiErrorKind =
   /** 非 2xx 响应 */
@@ -61,24 +66,10 @@ const readErrorResponse = async (
   return new ApiError(kind, message, response.status)
 }
 
-export const request = async (
-  path: string,
-  pairingCode: string,
-  init: RequestInit
-): Promise<Response> => {
-  const headers = new Headers(init.headers)
-  headers.set('X-Moseek-Pairing', pairingCode)
-  const options = {
-    ...init,
-    headers,
-    credentials: 'omit',
-    redirect: 'error',
-    cache: 'no-store',
-    targetAddressSpace: 'loopback',
-  } satisfies RequestInit & { targetAddressSpace: 'loopback' }
+export const request = async (url: string, init: RequestInit): Promise<Response> => {
   let response: Response
   try {
-    response = await fetch(`${LOCAL_SERVICE}${path}`, options)
+    response = await fetch(url, { ...init, credentials: 'omit', redirect: 'error', cache: 'no-store' })
   } catch (error) {
     if (init.signal?.aborted) {
       throw error
@@ -91,20 +82,28 @@ export const request = async (
   return response
 }
 
-/** 由本机服务验证配对码与 API 配置。 */
-export const verifyPairingCode = async (pairingCode: string, signal?: AbortSignal): Promise<void> => {
-  await request('/api/connect', pairingCode, {
+const anthropicHeaders = (apiKey: string, beta: boolean): Record<string, string> => ({
+  // DeepSeek 兼容接口的鉴权方式，也可使用 Authorization: Bearer。
+  'x-api-key': apiKey,
+  // Files API 和通过 file_id 引用图片时必传；纯文本聊天无需携带。
+  ...(beta ? { 'anthropic-beta': FILES_BETA } : {}),
+})
+
+/** 用 GET /models 校验 API Key（不产生费用） */
+export const verifyApiKey = async (apiKey: string, signal?: AbortSignal): Promise<void> => {
+  await request(`${API_ORIGIN}/models`, {
     method: 'GET',
+    headers: { Authorization: `Bearer ${apiKey}` },
     signal,
   })
 }
 
 /**
- * 上传附件时不设置过期时间，以便历史消息复用附件。
+ * POST /anthropic/v1/files 上传附件（不设过期时间，会话里的历史附件一直可用）。
  * purpose 为 null 时不传该字段（图片）；purpose 必须排在 file 之前。
  */
 export const uploadFile = async (
-  pairingCode: string,
+  apiKey: string,
   file: File,
   purpose: FilePurpose | null,
   signal?: AbortSignal
@@ -114,32 +113,43 @@ export const uploadFile = async (
     form.append('purpose', purpose)
   }
   form.append('file', file)
-  const response = await request('/api/attachments', pairingCode, {
+  const response = await request(`${ANTHROPIC_BASE_URL}/files`, {
     method: 'POST',
+    headers: anthropicHeaders(apiKey, true),
     body: form,
     signal,
   })
   return (await response.json()) as FileObject
 }
 
-export const deleteFile = async (pairingCode: string, fileId: string): Promise<void> => {
-  await request(`/api/attachments/${encodeURIComponent(fileId)}`, pairingCode, {
+/** DELETE /anthropic/v1/files/{file_id} */
+export const deleteFile = async (apiKey: string, fileId: string): Promise<void> => {
+  await request(`${ANTHROPIC_BASE_URL}/files/${encodeURIComponent(fileId)}`, {
     method: 'DELETE',
+    headers: anthropicHeaders(apiKey, true),
   })
 }
 
+const hasFile = (body: CreateMessageRequest) =>
+  body.messages.some(
+    (message) =>
+      typeof message.content !== 'string' &&
+      message.content.some((block) => block.type === 'image' || block.type === 'document')
+  )
+
 /**
- * 逐个产出流式事件，收到 message_stop 时结束。
+ * POST /anthropic/v1/messages（stream: true），逐个产出流式事件，收到 message_stop 时结束。
  * ping、保活注释与无法解析的内容不产出；中止请求时抛出 signal 的 AbortError。
  */
 export async function* streamMessage(
-  pairingCode: string,
+  apiKey: string,
   body: CreateMessageRequest,
   signal: AbortSignal
 ): AsyncGenerator<MessageStreamEvent> {
-  const response = await request('/api/chat', pairingCode, {
+  const response = await request(`${ANTHROPIC_BASE_URL}/messages`, {
     method: 'POST',
     headers: {
+      ...anthropicHeaders(apiKey, hasFile(body)),
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
     },

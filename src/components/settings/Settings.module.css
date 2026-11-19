@@ -208,15 +208,15 @@
   color: var(--dsw-alias-state-error-primary);
 }
 
-.pairingCode {
+.apiKey {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding-bottom: 4px;
 }
 
-.pairingCodeSaved,
-.pairingCodeInput {
+.apiKeySaved,
+.apiKeyInput {
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -225,14 +225,14 @@
   line-height: 24px;
 }
 
-.pairingCodeSaved {
+.apiKeySaved {
   justify-content: space-between;
   padding: 0 10px 0 16px;
   border-radius: 28px;
   background-color: var(--dsw-specific-login-input);
 }
 
-.pairingCodeMask {
+.apiKeyMask {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -240,7 +240,7 @@
   user-select: none;
 }
 
-.pairingCodeInput {
+.apiKeyInput {
   gap: 12px;
   padding: 0 14px;
   border-radius: 22px;
@@ -365,12 +365,12 @@
     flex: 1 1 auto;
   }
 
-  .pairingCode {
+  .apiKey {
     padding-bottom: 0;
   }
 
-  .pairingCodeSaved,
-  .pairingCodeInput {
+  .apiKeySaved,
+  .apiKeyInput {
     height: 52px;
     padding: 0 12px 0 16px;
     border: none;
@@ -379,7 +379,7 @@
     font-size: 16px;
   }
 
-  .pairingCodeSaved svg {
+  .apiKeySaved svg {
     width: 20px;
     height: 20px;
   }
