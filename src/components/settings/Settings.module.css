@@ -113,8 +113,7 @@
   text-underline-offset: 2px;
 }
 
-.fontRow,
-.fontLocal {
+.fontRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -128,15 +127,6 @@
 .fontRow .fontSelect {
   flex: 0 1 auto;
   min-width: 0;
-}
-
-.fontLocal {
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.fontLocal > span {
-  flex: 1 1 165px;
 }
 
 .fontCredits {

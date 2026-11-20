@@ -1,6 +1,5 @@
 import clsx from 'clsx'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { importCustomFont, restoreCustomFont } from '../../app/localFont.js'
+import type { ReactNode } from 'react'
 import { useTranslate, type TranslationKey } from '../../i18n/index.js'
 import {
   INTERFACE_FONTS,
@@ -15,7 +14,6 @@ import {
   useSettings,
   type ThemePreference,
 } from '../../services/settings.js'
-import { Button } from '../base/Button.js'
 import { Select } from '../base/Select.js'
 import { IconDarkOutline16, IconFollowsystemOutline16, IconLightOutline16 } from '../base/icons.js'
 import styles from './Settings.module.css'
@@ -51,17 +49,18 @@ const paletteLabels = {
 
 const fontLabels = {
   harmony: 'fontHarmony',
-  iqoo: 'fontIqoo',
+  harmonyRegular: 'fontHarmonyRegular',
   sourceHanSans: 'fontSourceHanSans',
   sourceHanSerif: 'fontSourceHanSerif',
+  kai: 'fontKai',
   inter: 'fontInter',
   system: 'fontSystem',
-  custom: 'fontCustom',
 } satisfies Record<InterfaceFont, TranslationKey>
 
 const fontLicenses: Partial<Record<InterfaceFont, string>> = {
   sourceHanSans: './fonts/SourceHanSans-OFL.txt',
   sourceHanSerif: './fonts/SourceHanSerif-OFL.txt',
+  kai: './fonts/LXGWWenKai-OFL.txt',
   inter: './fonts/Inter-OFL.txt',
 }
 
@@ -112,61 +111,9 @@ export const AppearanceSettings = () => {
   )
 }
 
-type LocalFontStatus = {
-  font: 'iqoo' | 'custom'
-  message: TranslationKey
-  filename?: string
-}
-
 const FontSetting = () => {
   const t = useTranslate()
   const font = useSettings((state) => state.interfaceFont)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [status, setStatus] = useState<LocalFontStatus>()
-  const [importing, setImporting] = useState(false)
-  const [importFailed, setImportFailed] = useState(false)
-
-  useEffect(() => {
-    let current = true
-    const report = (next: LocalFontStatus) => {
-      if (current) {
-        setStatus(next)
-      }
-    }
-    if (font === 'iqoo') {
-      void document.fonts.load('500 14px "Moseek iQOO"', '山川 Aa').then(
-        (faces) =>
-          report({ font, message: faces.length ? 'fontIqooReady' : 'fontIqooUnavailable' }),
-        () => report({ font, message: 'fontIqooUnavailable' })
-      )
-    }
-    if (font === 'custom') {
-      void restoreCustomFont().then(
-        (filename) =>
-          report({ font, message: filename ? 'fontFileReady' : 'fontFileHelp', filename }),
-        () => report({ font, message: 'fontFileUnavailable' })
-      )
-    }
-    return () => {
-      current = false
-    }
-  }, [font])
-
-  const importFont = async (file: File) => {
-    setImporting(true)
-    setImportFailed(false)
-    try {
-      await importCustomFont(file)
-      setStatus({ font: 'custom', message: 'fontFileReady', filename: file.name })
-      setInterfaceFont('custom')
-    } catch {
-      setImportFailed(true)
-    } finally {
-      setImporting(false)
-    }
-  }
-
-  const localStatus = status?.font === font ? status : undefined
   const license = fontLicenses[font]
   return (
     <div className={styles.cell}>
@@ -176,49 +123,10 @@ const FontSetting = () => {
           ariaLabel={t('interfaceFont')}
           className={styles.fontSelect}
           value={font}
-          disabled={importing}
           options={INTERFACE_FONTS.map((value) => ({ value, label: t(fontLabels[value]) }))}
-          onChange={(value) => {
-            setImportFailed(false)
-            setInterfaceFont(value)
-          }}
+          onChange={setInterfaceFont}
         />
       </div>
-      {font === 'custom' || font === 'iqoo' ? (
-        <div className={styles.fontLocal}>
-          <span className={styles.description} role="status">
-            {localStatus
-              ? t(localStatus.message, { filename: localStatus.filename ?? '' })
-              : t(font === 'custom' ? 'fontFileHelp' : 'fontIqooHelp')}
-          </span>
-          <Button
-            variant="outlined"
-            size="s"
-            disabled={importing}
-            onClick={() => fileRef.current?.click()}
-          >
-            {t(importing ? 'fontImporting' : 'fontImport')}
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".ttf,.otf,.woff,.woff2"
-            hidden
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0]
-              event.currentTarget.value = ''
-              if (file) {
-                void importFont(file)
-              }
-            }}
-          />
-          {importFailed ? (
-            <div role="alert" className={styles.error}>
-              {t('fontImportFailed')}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
       {font !== 'system' ? (
         <div className={styles.fontCredits}>
           <a
@@ -231,7 +139,9 @@ const FontSetting = () => {
           </a>
           {license ? (
             <a className={styles.fontLicense} href={license} target="_blank" rel="noreferrer">
-              {t('fontLicenseLink', { name: t(fontLabels[font]) })}
+              {t(font === 'kai' ? 'fontKaiLicense' : 'fontLicenseLink', {
+                name: t(fontLabels[font]),
+              })}
             </a>
           ) : null}
         </div>

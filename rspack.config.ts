@@ -79,11 +79,13 @@ export default defineConfig({
           to: 'HARMONYOS-SANS-LICENSE.txt',
           toType: 'file',
         },
-        ...['SourceHanSans-OFL.txt', 'SourceHanSerif-OFL.txt', 'Inter-OFL.txt'].map((name) => ({
-          from: path.resolve(root, 'src/assets/fonts', name),
-          to: `fonts/${name}`,
-          toType: 'file' as const,
-        })),
+        ...['SourceHanSans-OFL.txt', 'SourceHanSerif-OFL.txt', 'Inter-OFL.txt', 'LXGWWenKai-OFL.txt'].map(
+          (name) => ({
+            from: path.resolve(root, 'src/assets/fonts', name),
+            to: `fonts/${name}`,
+            toType: 'file' as const,
+          })
+        ),
         { from: path.resolve(root, 'src/favicon.png'), to: 'favicon.png', toType: 'file' },
       ],
     }),

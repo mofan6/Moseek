@@ -11,14 +11,26 @@
 }
 
 @font-face {
-  font-family: 'Moseek iQOO';
+  font-family: 'Moseek Harmony Regular';
   font-style: normal;
   font-display: swap;
-  font-weight: 500;
+  font-weight: 400;
   src:
-    local('iQOO Sans Medium'), local('iQOOSans-Medium'), local('iQOO Sans Regular'),
-    local('iQOO Sans SC'), local('iQOO Sans'), local('iQOO Type Medium'), local('iQOOType-Medium'),
-    local('iQOO Type Regular'), local('iQOOType-Regular'), local('iQOO Type');
+    local('HarmonyOS Sans SC Regular'),
+    local('HarmonyOS_Sans_SC_Regular'),
+    url('../assets/fonts/HarmonyOS_Sans_SC_Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Moseek Kai';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src:
+    local('KaiTi'),
+    local('STKaiti'),
+    local('STKaitiSC-Regular'),
+    url('../assets/fonts/LXGWWenKaiGBLite-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -49,8 +61,12 @@
   src: url('../assets/fonts/InterVariable.woff2') format('woff2');
 }
 
-:root[data-moseek-font='iqoo'] {
-  --moseek-font-ui: 'Moseek iQOO', 'HarmonyOS Sans SC';
+:root[data-moseek-font='harmonyRegular'] {
+  --moseek-font-ui: 'Moseek Harmony Regular', 'HarmonyOS Sans SC';
+}
+
+:root[data-moseek-font='kai'] {
+  --moseek-font-ui: 'Moseek Kai', 'HarmonyOS Sans SC';
 }
 
 :root[data-moseek-font='sourceHanSans'] {
@@ -67,8 +83,4 @@
 
 :root[data-moseek-font='system'] {
   --moseek-font-ui: system-ui;
-}
-
-:root[data-moseek-font='custom'] {
-  --moseek-font-ui: 'Moseek Custom', 'HarmonyOS Sans SC';
 }

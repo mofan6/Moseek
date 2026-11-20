@@ -13,12 +13,12 @@ export type Palette = (typeof PALETTES)[number]
 
 export const INTERFACE_FONTS = [
   'harmony',
-  'iqoo',
+  'harmonyRegular',
   'sourceHanSans',
   'sourceHanSerif',
+  'kai',
   'inter',
   'system',
-  'custom',
 ] as const
 
 export type InterfaceFont = (typeof INTERFACE_FONTS)[number]

@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { InterfaceFont, Palette } from '../services/appearance.js'
 import { useSettings, type ThemePreference } from '../services/settings.js'
-import { restoreCustomFont } from './localFont.js'
 
 export type Theme = 'light' | 'dark'
 
@@ -68,11 +67,6 @@ const syncTheme = () => {
   if (interfaceFont !== appliedFont) {
     appliedFont = interfaceFont
     document.documentElement.dataset.moseekFont = interfaceFont
-    if (interfaceFont === 'custom') {
-      void restoreCustomFont().catch(() => {
-        // The settings view reports load failures; the UI uses its font fallback.
-      })
-    }
   }
 }
 

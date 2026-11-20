@@ -12,7 +12,6 @@ declare const styles: {
   readonly "fontLicense": string;
   readonly "fontRow": string;
   readonly "fontSelect": string;
-  readonly "fontLocal": string;
   readonly "fontCredits": string;
   readonly "uploadButton": string;
   readonly "locationCell": string;

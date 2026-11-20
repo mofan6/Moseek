@@ -18,16 +18,18 @@ export const Welcome = () => {
       <div className={styles.welcome}>
         <h1 className={styles.greeting}>{t('welcomeMessageChat250808')}</h1>
         <ChatInput sessionId={null} />
-        <div className={styles.footer}>
-          <button
-            type="button"
-            className={styles.connection}
-            onClick={() => openSettings('api')}
-          >
-            <IconLinkOutline16 />
-            {t(hasApiKey ? 'apiKeySaved' : 'setUpApiKey')}
-          </button>
-        </div>
+        {hasApiKey ? null : (
+          <div className={styles.footer}>
+            <button
+              type="button"
+              className={styles.connection}
+              onClick={() => openSettings('api')}
+            >
+              <IconLinkOutline16 />
+              {t('setUpApiKey')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
