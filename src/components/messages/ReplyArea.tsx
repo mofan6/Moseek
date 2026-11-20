@@ -1,6 +1,6 @@
 import { useTranslate } from '../../i18n/index.js'
 import clsx from 'clsx'
-import { memo, useEffect, useState, type ReactNode } from 'react'
+import { memo, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import {
   IconBrowseOutline16,
   IconBrowseWarningOutline16,
@@ -32,6 +32,7 @@ import { Tooltip } from '../base/Tooltip.js'
 import { Markdown } from '../markdown/Markdown.js'
 import { SiteThumbnails } from '../search/SiteLogo.js'
 import { toggleSearchPanel, useSearchPanel } from '../search/searchPanelState.js'
+import { usePauseFollowing } from './scrollContext.js'
 import styles from './ReplyArea.module.css'
 import './thinking.markdown.css'
 
@@ -65,44 +66,141 @@ export const ReplyArea = memo(function ReplyArea({
   hasResponse: boolean
 }) {
   useTranslate()
-  const [open, setOpen] = useState(true)
   const titleActive = streaming && !hasResponse
   useTicker(titleActive, 1000)
   if (view.steps.length === 0 && !(message.thinking && streaming)) {
     return null
   }
-  // 未记录请求开关时，按是否有思考内容显示标题。
-  const thinking = message.thinking ?? view.steps.some((step) => step.type === 'thinking')
+  const thinking = message.thinking || view.steps.some((step) => step.type === 'thinking')
   const title = thinking ? getAreaTitle(view, streaming, Date.now(), hasResponse) : null
   const stopped = !streaming && !hasResponse
+  const steps = view.steps.length > 0 ? (
+    <div className={styles.steps}>
+      {view.steps.map((step, index) => (
+        <StepItem
+          key={stepKey(step, index)}
+          step={step}
+          message={message}
+          sources={view.sources}
+          streaming={streaming}
+          isLast={index === view.steps.length - 1}
+        />
+      ))}
+    </div>
+  ) : null
+
   return (
     <div className={styles.area}>
       {title ? (
-        <div className={styles.title} onClick={() => setOpen((value) => !value)}>
-          <span className={clsx(styles.titleIcon, stopped && styles.stoppedIcon)}>
-            <IconThinkOutline16 />
-          </span>
-          <span className={clsx(styles.titleText, titleActive && styles.shimmer)}>{title}</span>
-          {open ? <IconChevronDownOutline14 /> : <IconChevronRightOutline14 />}
-        </div>
-      ) : null}
-      {open || !title ? (
-        <div className={styles.steps}>
-          {view.steps.map((step, index) => (
-            <StepItem
-              key={stepKey(step, index)}
-              step={step}
-              message={message}
-              sources={view.sources}
-              streaming={streaming}
-              isLast={index === view.steps.length - 1}
-            />
-          ))}
-        </div>
-      ) : null}
+        <ThinkingPanel title={title} active={titleActive} stopped={stopped}>
+          {steps}
+        </ThinkingPanel>
+      ) : steps}
     </div>
   )
 })
+
+const ThinkingPanel = ({
+  title,
+  active,
+  stopped,
+  children,
+}: {
+  title: string
+  active: boolean
+  stopped: boolean
+  children: ReactNode
+}) => {
+  const t = useTranslate()
+  const id = useId()
+  const pauseFollowing = usePauseFollowing()
+  const [expanded, setExpanded] = useState(false)
+  const frameRef = useRef<HTMLDivElement>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const scrollTop = useRef(0)
+  const followLatest = useRef(true)
+  const hasSteps = children !== null
+
+  useLayoutEffect(() => {
+    const frame = frameRef.current
+    const viewport = viewportRef.current
+    const steps = viewport?.firstElementChild
+    if (!frame || !viewport || !steps || expanded || !hasSteps) {
+      return
+    }
+    viewport.scrollTop = scrollTop.current
+    const updateEdges = () => {
+      const { scrollHeight, scrollTop, clientHeight } = viewport
+      frame.toggleAttribute('data-overflow-top', scrollTop > 1)
+      frame.toggleAttribute('data-overflow-bottom', scrollHeight - clientHeight - scrollTop > 1)
+    }
+    const onResize = () => {
+      if (active && followLatest.current) {
+        viewport.scrollTop = viewport.scrollHeight
+      }
+      scrollTop.current = viewport.scrollTop
+      updateEdges()
+    }
+    const onScroll = () => {
+      if (viewport.scrollTop < scrollTop.current - 1) {
+        followLatest.current = false
+      } else if (viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop <= 2) {
+        followLatest.current = true
+      }
+      scrollTop.current = viewport.scrollTop
+      updateEdges()
+    }
+    onResize()
+    const observer = new ResizeObserver(onResize)
+    observer.observe(viewport)
+    observer.observe(steps)
+    viewport.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      observer.disconnect()
+      viewport.removeEventListener('scroll', onScroll)
+    }
+  }, [active, expanded, hasSteps])
+
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.title}
+        aria-label={`${title} · ${t(expanded ? 'collapseThinking' : 'expandThinking')}`}
+        aria-controls={id}
+        aria-expanded={expanded}
+        onClick={() => {
+          if (!expanded) {
+            pauseFollowing()
+          }
+          setExpanded(!expanded)
+        }}
+      >
+        <span className={clsx(styles.titleIcon, stopped && styles.stoppedIcon)}>
+          <IconThinkOutline16 />
+        </span>
+        <span className={clsx(styles.titleText, active && styles.shimmer)}>{title}</span>
+        {expanded ? <IconChevronDownOutline14 /> : <IconChevronRightOutline14 />}
+      </button>
+      <div
+        className={clsx(styles.panel, expanded && styles.expanded)}
+        ref={frameRef}
+        hidden={!hasSteps}
+      >
+        <div
+          id={id}
+          ref={viewportRef}
+          className={styles.thinkingViewport}
+          role="region"
+          aria-label={t('thinkingDetails')}
+          tabIndex={expanded ? undefined : 0}
+        >
+          {children}
+        </div>
+      </div>
+    </>
+  )
+}
 
 const stepKey = (step: Step, index: number) =>
   step.type === 'thinking' || step.type === 'text' || step.type === 'search'

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useIsMobile } from '../../app/viewport.js'
+import { useTranslate } from '../../i18n/index.js'
 import {
   buildMessageVersions,
   getVisibleMessages,
@@ -9,9 +9,10 @@ import { selectMessageVersion } from '../../services/chat/store.js'
 import type { Session } from '../../services/chat/types.js'
 import { closeSearchPanel } from '../search/searchPanelState.js'
 import { AssistantMessage } from './AssistantMessage.js'
-import { ScrollToBottomContext } from './scrollContext.js'
+import { MessageScrollContext } from './scrollContext.js'
 import { UserMessage } from './UserMessage.js'
 import type { Message } from '../../services/chat/types.js'
+import styles from './MessageList.module.css'
 
 /**
  * 会话共用可重试的附件上传失败入口，覆盖当前提问与历史消息中的附件。
@@ -27,10 +28,8 @@ const getUploadRetryId = (messages: Message[], streaming: boolean) => {
     ? last.id
     : null
 }
-import styles from './MessageList.module.css'
-
-/** 距底部小于该值时视为在底部，流式内容增长时跟随 */
 const STICKY_THRESHOLD = 40
+const ANSWER_TOP_GAP = 12
 const EMPTY_VERSIONS: MessageVersions = { ids: [], index: -1 }
 
 export const MessageList = ({
@@ -42,11 +41,13 @@ export const MessageList = ({
   streaming: boolean
   footer: React.ReactNode
 }) => {
-  const isMobile = useIsMobile()
+  const t = useTranslate()
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const stickyRef = useRef(true)
+  const scrollMode = useRef<'tail' | 'paused' | 'manual' | 'answer'>('tail')
   const scrollTopRef = useRef(0)
+  const streamHadAnswer = useRef<boolean | null>(null)
+  const answerAnchor = useRef<{ element: HTMLElement; initialScrollTop: number } | null>(null)
   const restoreScrollRef = useRef<{ messageId: string; top: number } | null>(null)
   const messages = getVisibleMessages(session)
   const [previousVersions, setPreviousVersions] = useState(() =>
@@ -59,32 +60,65 @@ export const MessageList = ({
   if (versions !== previousVersions) {
     setPreviousVersions(versions)
   }
-  const lastMessageId = messages.at(-1)?.id
+  const lastMessage = messages.at(-1)
+  const lastMessageId = lastMessage?.id
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current
-    if (el && stickyRef.current) {
+    if (el && scrollMode.current === 'tail') {
       el.scrollTop = el.scrollHeight
       scrollTopRef.current = el.scrollTop
     }
   }, [])
 
-  // 内容、键盘和输入框高度变化时，继续遵循当前跟随状态。
+  const pauseFollowing = useCallback(() => {
+    if (scrollMode.current === 'tail') {
+      scrollMode.current = 'paused'
+    }
+  }, [])
+  const scrollControls = useMemo(
+    () => ({ followLatest: scrollToBottom, pauseFollowing }),
+    [pauseFollowing, scrollToBottom]
+  )
+
+  const clearAnswerAnchor = useCallback(() => {
+    answerAnchor.current = null
+    contentRef.current?.style.removeProperty('min-height')
+  }, [])
+
+  // 预留末尾空间，让刚出现的短正文也能定位到滚动区顶部。
+  const reserveAnswerSpace = useCallback(() => {
+    const content = contentRef.current
+    const scroll = scrollRef.current
+    const anchor = answerAnchor.current
+    if (!content || !scroll || !anchor?.element.isConnected) {
+      return
+    }
+    const offset = anchor.element.getBoundingClientRect().top - content.getBoundingClientRect().top
+    const minHeight = Math.max(0, Math.ceil(offset + scroll.clientHeight - ANSWER_TOP_GAP))
+    content.style.minHeight = `${minHeight}px`
+  }, [])
+
   useLayoutEffect(() => {
     const content = contentRef.current
     const scroll = scrollRef.current
     if (!content || !scroll) {
       return
     }
-    const observer = new ResizeObserver(scrollToBottom)
+    const observer = new ResizeObserver(() => {
+      reserveAnswerSpace()
+      scrollToBottom()
+    })
     observer.observe(content)
     observer.observe(scroll)
     return () => observer.disconnect()
-  }, [isMobile, scrollToBottom])
+  }, [reserveAnswerSpace, scrollToBottom])
 
   // 切换版本后将选择器留在原位置，避免回答长短变化导致操作区跳出视口。
   useLayoutEffect(() => {
     const anchor = restoreScrollRef.current
     const scroll = scrollRef.current
+    clearAnswerAnchor()
+    streamHadAnswer.current = null
     if (anchor && scroll) {
       const switcher = scroll.querySelector<HTMLElement>(
         `[data-message-version="${CSS.escape(anchor.messageId)}"]`
@@ -92,12 +126,50 @@ export const MessageList = ({
       if (switcher) {
         scroll.scrollTop += switcher.getBoundingClientRect().top - anchor.top
       }
+      scrollTopRef.current = scroll.scrollTop
       restoreScrollRef.current = null
       return
     }
-    stickyRef.current = true
+    scrollMode.current = 'tail'
     scrollToBottom()
-  }, [session.id, lastMessageId, scrollToBottom])
+  }, [session.id, lastMessageId, clearAnswerAnchor, scrollToBottom])
+
+  useLayoutEffect(() => {
+    const scroll = scrollRef.current
+    if (
+      !scroll ||
+      lastMessage?.role !== 'assistant' ||
+      (!streaming && streamHadAnswer.current === null)
+    ) {
+      return
+    }
+    const answer = scroll.querySelector<HTMLElement>(
+      `[data-reply-answer="${CSS.escape(lastMessage.id)}"]`
+    )
+    if (answer && streamHadAnswer.current === false) {
+      const shouldAlign = scrollMode.current === 'tail' || scrollMode.current === 'paused'
+      scrollMode.current = 'answer'
+      if (shouldAlign) {
+        answerAnchor.current = { element: answer, initialScrollTop: 0 }
+        reserveAnswerSpace()
+        scroll.scrollTop +=
+          answer.getBoundingClientRect().top - scroll.getBoundingClientRect().top - ANSWER_TOP_GAP
+        answerAnchor.current.initialScrollTop = scroll.scrollTop
+        scrollTopRef.current = scroll.scrollTop
+      }
+    } else if (answer && streamHadAnswer.current === null) {
+      // 续写开始时正文已经可见，保留当前阅读位置。
+      scrollMode.current = 'answer'
+    } else if (!answer && streamHadAnswer.current) {
+      // 工具调用前的文字会移入思考框，随后出现的正式正文仍可定位。
+      const anchor = answerAnchor.current
+      const atAnchor = anchor && Math.abs(scrollTopRef.current - anchor.initialScrollTop) < 2
+      clearAnswerAnchor()
+      scrollMode.current = atAnchor ? 'tail' : 'manual'
+      scrollToBottom()
+    }
+    streamHadAnswer.current = streaming ? answer !== null : null
+  }, [lastMessage, streaming, clearAnswerAnchor, reserveAnswerSpace, scrollToBottom])
 
   useEffect(closeSearchPanel, [session.id, lastMessageId])
 
@@ -107,44 +179,44 @@ export const MessageList = ({
         return
       }
       restoreScrollRef.current = { messageId, top: anchorTop }
-      stickyRef.current = false
+      scrollMode.current = 'manual'
       closeSearchPanel()
       selectMessageVersion(session.id, messageId)
     },
     [session.id, streaming]
   )
 
-  // 跨移动端断点时切换滚动层，并保持输入框及当前阅读位置。
   useLayoutEffect(() => {
     const el = scrollRef.current
     if (!el) {
       return
     }
-    if (stickyRef.current) {
-      scrollToBottom()
-    } else {
-      el.scrollTop = scrollTopRef.current
-    }
     const onScroll = () => {
-      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < STICKY_THRESHOLD
-      // 仅在用户向上滚动时停止跟随底部，布局或内容增高时保持跟随状态。
-      if (nearBottom) {
-        stickyRef.current = true
-      } else if (el.scrollTop < scrollTopRef.current) {
-        stickyRef.current = false
+      if (scrollMode.current !== 'answer' && el.scrollTop !== scrollTopRef.current) {
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < STICKY_THRESHOLD
+        if (nearBottom && el.scrollTop > scrollTopRef.current) {
+          scrollMode.current = 'tail'
+        } else if (!nearBottom && el.scrollTop < scrollTopRef.current) {
+          scrollMode.current = 'manual'
+        }
       }
       scrollTopRef.current = el.scrollTop
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
-  }, [isMobile, scrollToBottom])
+  }, [])
 
   const lastIndex = messages.length - 1
   const uploadRetryId = getUploadRetryId(messages, streaming)
   return (
-    <ScrollToBottomContext.Provider value={scrollToBottom}>
-      <div ref={isMobile ? undefined : scrollRef} className={styles.container}>
-        <div ref={isMobile ? scrollRef : undefined} className={styles.scroll}>
+    <MessageScrollContext.Provider value={scrollControls}>
+      <div className={styles.container}>
+        <div
+          ref={scrollRef}
+          className={styles.scroll}
+          role="region"
+          aria-label={t('conversationMessages')}
+        >
           <div ref={contentRef} className={styles.column}>
             {messages.map((message, index) =>
               message.role === 'user' ? (
@@ -176,6 +248,6 @@ export const MessageList = ({
         </div>
         {footer}
       </div>
-    </ScrollToBottomContext.Provider>
+    </MessageScrollContext.Provider>
   )
 }

@@ -1,5 +1,6 @@
 declare const styles: {
   readonly "message": string;
+  readonly "answer": string;
   readonly "actions": string;
   readonly "waiting": string;
   readonly "waitingDot": string;

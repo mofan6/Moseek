@@ -1,12 +1,16 @@
 .area {
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .title {
   display: flex;
   align-items: center;
-  height: 34px;
-  margin-bottom: 2px;
+  min-height: 36px;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--dsw-alias-label-secondary);
   cursor: pointer;
   user-select: none;
@@ -14,6 +18,80 @@
 
   &:hover {
     color: var(--dsw-alias-label-primary);
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--dsw-alias-brand-primary);
+    outline-offset: -2px;
+  }
+}
+
+.panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  background: var(--dsw-specific-sidebar-fill);
+}
+
+.thinkingViewport {
+  max-block-size: clamp(100px, calc(var(--app-viewport-height, 100dvh) * 0.24), 176px);
+  padding: 6px 10px 6px 12px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-color) transparent;
+
+  &:focus-visible {
+    outline: 2px solid var(--dsw-alias-brand-primary);
+    outline-offset: -2px;
+    border-radius: inherit;
+  }
+}
+
+.panel:not(.expanded) {
+  &::before,
+  &::after {
+    position: absolute;
+    z-index: 1;
+    inset-inline: 0;
+    height: 24px;
+    background: var(--dsw-specific-sidebar-fill);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease-out;
+    content: '';
+  }
+
+  &::before {
+    inset-block-start: 0;
+    mask-image: linear-gradient(to bottom, black, transparent);
+  }
+
+  &::after {
+    inset-block-end: 0;
+    mask-image: linear-gradient(to top, black, transparent);
+  }
+
+  &[data-overflow-top]::before,
+  &[data-overflow-bottom]::after {
+    opacity: 1;
+  }
+}
+
+.expanded .thinkingViewport {
+  max-block-size: none;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel:not(.expanded)::before,
+  .panel:not(.expanded)::after {
+    transition: none;
   }
 }
 
