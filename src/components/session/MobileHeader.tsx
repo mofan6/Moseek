@@ -9,7 +9,7 @@ import styles from './MobileHeader.module.css'
 export const MobileHeader = ({ title }: { title?: string }) => {
   const t = useTranslate()
   return (
-    <div className={styles.header}>
+    <div className={styles.header} data-home={title === undefined || undefined}>
       <IconButton
         size="xl"
         tone="primary"

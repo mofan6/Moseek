@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import { useIsMobile } from '../../app/viewport.js'
 import { useTranslate } from '../../i18n/index.js'
 import type { Session } from '../../services/chat/types.js'
@@ -11,11 +10,9 @@ import styles from './SessionView.module.css'
 export const SessionView = ({
   session,
   streaming,
-  siderCollapsed,
 }: {
   session: Session
   streaming: boolean
-  siderCollapsed: boolean
 }) => {
   const t = useTranslate()
   const isMobile = useIsMobile()
@@ -26,9 +23,7 @@ export const SessionView = ({
         <MobileHeader title={title} />
       ) : (
         <div className={styles.header}>
-          <div className={clsx(styles.title, siderCollapsed && styles.withCollapsedSider)}>
-            {title}
-          </div>
+          <div className={styles.title}>{title}</div>
         </div>
       )}
       <MessageList

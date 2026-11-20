@@ -5,9 +5,12 @@
   box-sizing: border-box;
   height: 60px;
   padding: 12px 10px 4px;
-  background: var(--moseek-glass-rail);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+
+  &[data-home] {
+    background: var(--moseek-glass-rail);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
 }
 
 .title {

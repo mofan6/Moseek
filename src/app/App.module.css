@@ -1,4 +1,6 @@
 .frame {
+  --moseek-sidebar-duration: 260ms;
+  --moseek-sidebar-motion: var(--moseek-sidebar-duration) var(--ds-ease-in-out);
   position: absolute;
   inset: 0;
   display: flex;
@@ -48,6 +50,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .frame {
+    --moseek-sidebar-duration: 0ms;
+  }
+
   .atmosphere::before {
     animation: none;
   }

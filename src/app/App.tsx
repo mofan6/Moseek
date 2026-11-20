@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect, useRef, type MouseEvent } from 'react'
 import { useTranslate } from '../i18n/index.js'
-import { useSettings } from '../services/settings.js'
+import { setSiderCollapsed, useSettings } from '../services/settings.js'
 import { useIsMobile, useMobileViewport, usePreventPageScroll } from './viewport.js'
 import {
   bindChatPersistence,
@@ -23,7 +23,7 @@ import { Button } from '../components/base/Button.js'
 import { stopReadAloud } from '../services/speech/readAloud.js'
 import { CollapsedSider } from '../components/sider/CollapsedSider.js'
 import { closeMobileSider } from '../components/sider/mobileSiderState.js'
-import { MobileSider, Sider } from '../components/sider/Sider.js'
+import { DESKTOP_SIDER_ID, MobileSider, Sider } from '../components/sider/Sider.js'
 import styles from './App.module.css'
 
 export const App = () => {
@@ -45,12 +45,29 @@ export const App = () => {
     state.activeId === null ? false : state.sessionLoadErrors[state.activeId] === true
   )
   const frameRef = useMobileViewport(isMobile)
+  const restoreSidebarFocus = useRef(false)
   const streaming = useChatStore((state) =>
     state.activeId === null ? false : Object.hasOwn(state.streaming, state.activeId)
   )
   const activeId = useChatStore((state) => state.activeId)
 
   usePreventPageScroll(isMobile)
+
+  const toggleSidebar = (event: MouseEvent<HTMLButtonElement>) => {
+    restoreSidebarFocus.current = event.detail === 0
+    setSiderCollapsed(!siderCollapsed)
+  }
+
+  useLayoutEffect(() => {
+    if (restoreSidebarFocus.current) {
+      restoreSidebarFocus.current = false
+      frameRef.current
+        ?.querySelector<HTMLButtonElement>(
+          `button[aria-controls="${DESKTOP_SIDER_ID}"][aria-expanded="${!siderCollapsed}"]`
+        )
+        ?.focus({ preventScroll: true })
+    }
+  }, [frameRef, siderCollapsed])
 
   useEffect(() => {
     document.documentElement.lang = locale
@@ -75,7 +92,11 @@ export const App = () => {
     <>
       <div ref={frameRef} className={styles.frame} data-chat-active={activeId !== null || undefined}>
         <div className={styles.atmosphere} aria-hidden="true" />
-        {isMobile ? <MobileSider /> : siderCollapsed ? null : <Sider />}
+        {isMobile ? (
+          <MobileSider />
+        ) : (
+          <Sider collapsed={siderCollapsed} onCollapse={toggleSidebar} />
+        )}
         <main className={styles.main} data-sidebar-collapsed={siderCollapsed || undefined}>
           {saveError ? (
             <div className={styles.saveError} role="alert">
@@ -91,7 +112,7 @@ export const App = () => {
             </div>
           ) : null}
           <div className={styles.content}>
-            {siderCollapsed ? <CollapsedSider /> : null}
+            {isMobile ? null : <CollapsedSider visible={siderCollapsed} onExpand={toggleSidebar} />}
             {!ready || (activeId !== null && !session) ? (
               <div className={styles.loadingView}>
                 {isMobile ? <MobileHeader /> : null}
@@ -119,11 +140,7 @@ export const App = () => {
                 </div>
               </div>
             ) : session ? (
-              <SessionView
-                session={session}
-                streaming={streaming}
-                siderCollapsed={siderCollapsed}
-              />
+              <SessionView session={session} streaming={streaming} />
             ) : (
               <Welcome />
             )}
