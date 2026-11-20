@@ -1,12 +1,12 @@
 import clsx from 'clsx'
-import { memo, useCallback, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useRef, type PointerEvent } from 'react'
 import {
   IconGlobeLanguageOutline14,
   IconPaperclipOutline16,
   IconSendOutline16,
   IconStopFill16,
 } from '../base/icons.js'
-import { MODEL_NAMES, REASONING_LEVELS } from '../../services/api/models.js'
+import { MODEL_NAMES, REASONING_LABELS, REASONING_LEVELS } from '../../services/api/models.js'
 import type { ChatModel } from '../../services/api/types.js'
 import { setModel, setReasoning, setSearch, useSettings } from '../../services/settings.js'
 import { useIsMobile } from '../../app/viewport.js'
@@ -41,7 +41,12 @@ const modelOptions = (Object.keys(MODEL_NAMES) as ChatModel[]).map((value) => ({
   label: MODEL_NAMES[value],
   shortLabel: MODEL_NAMES[value].replace(/^DeepSeek /, ''),
 }))
-const reasoningOptions = REASONING_LEVELS.map((value) => ({ value, label: value, lang: 'en' }))
+const reasoningOptions = REASONING_LEVELS.map((value) => ({
+  value,
+  label: REASONING_LABELS[value],
+  lang: 'en',
+}))
+const glassMotion = window.matchMedia('(any-hover: hover) and (any-pointer: fine) and (prefers-reduced-motion: no-preference)')
 
 /** 输入框：模型与推理设置、消息、文件、智能搜索、语音和发送操作。 */
 export const ChatInput = memo(function ChatInput({ sessionId }: { sessionId: string | null }) {
@@ -66,6 +71,36 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const search = useSettings((state) => state.search)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const glassRef = useRef<HTMLSpanElement>(null)
+  const glassFrame = useRef(0)
+
+  const followGlassPointer = ({ pointerType, clientX, clientY, currentTarget }: PointerEvent<HTMLDivElement>) => {
+    if (pointerType !== 'mouse' || !glassMotion.matches) {
+      return
+    }
+    cancelAnimationFrame(glassFrame.current)
+    glassFrame.current = requestAnimationFrame(() => {
+      const glass = glassRef.current
+      if (!glass) {
+        return
+      }
+      const bounds = currentTarget.getBoundingClientRect()
+      const x = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width))
+      const y = Math.max(0, Math.min(1, (clientY - bounds.top) / bounds.height))
+      glass.style.setProperty('--glass-x', `${x * 100}%`)
+      glass.style.setProperty('--glass-y', `${y * 100}%`)
+      glass.style.setProperty('--glass-rx', `${(0.5 - y) * 5}deg`)
+      glass.style.setProperty('--glass-ry', `${(x - 0.5) * 4}deg`)
+      glass.dataset.lit = ''
+    })
+  }
+
+  const settleGlass = () => {
+    cancelAnimationFrame(glassFrame.current)
+    glassRef.current?.removeAttribute('data-lit')
+  }
+
+  useEffect(() => () => cancelAnimationFrame(glassFrame.current), [])
 
   const acceptFiles = (files: File[]) => {
     if (files.length === 0 || useChatStore.getState().importingHistory || !ensureApiKey()) {
@@ -148,12 +183,16 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   return (
     <div
       className={clsx(styles.wrapper, sessionId === null ? styles.home : styles.session)}
+      onPointerMove={followGlassPointer}
+      onPointerLeave={settleGlass}
+      onPointerCancel={settleGlass}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           textareaRef.current?.focus({ preventScroll: true })
         }
       }}
     >
+      <span ref={glassRef} className={styles.glass} aria-hidden="true" />
       <DraftAttachments items={attachments} onRetry={retryFile} onRemove={removeFile} />
       <div className={styles.textareaWrapper}>
         <textarea

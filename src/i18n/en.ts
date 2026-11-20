@@ -132,6 +132,8 @@ export const en = {
   avatarMenuSettingsDialogThemeSelectLightOption: 'Light',
   avatarMenuSettingsDialogThemeSelectDarkOption: 'Dark',
   avatarMenuSettingsDialogThemeSelectSystemOption: 'System',
+  switchToLightTheme: 'Switch to light mode',
+  switchToDarkTheme: 'Switch to dark mode',
   apiSettings: 'API settings',
   setUpApiKey: 'Set up DeepSeek API key',
   apiKeyHelp: 'Your browser saves the API key and reads it again when you reopen Moseek.',

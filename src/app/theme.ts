@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from 'react'
+import { flushSync } from 'react-dom'
 import type { InterfaceFont, Palette } from '../services/appearance.js'
-import { useSettings, type ThemePreference } from '../services/settings.js'
+import { setThemePreference, useSettings, type ThemePreference } from '../services/settings.js'
 
 export type Theme = 'light' | 'dark'
 
 const query = window.matchMedia('(prefers-color-scheme: dark)')
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
 const subscribeOsTheme = (listener: () => void) => {
   query.addEventListener('change', listener)
@@ -21,6 +23,88 @@ export const useTheme = (): Theme => {
   const preference = useSettings((state) => state.themePreference)
   const osTheme = useSyncExternalStore(subscribeOsTheme, getOsTheme)
   return resolveTheme(preference, osTheme)
+}
+
+let reveal: { target: ThemePreference; transition: ViewTransition; finish: () => void } | undefined
+
+/** Capture the two color modes and reveal the new one from the selected control. */
+export const changeTheme = (target: ThemePreference, source: HTMLElement) => {
+  if (reveal) {
+    const { transition, finish } = reveal
+    finish()
+    transition.skipTransition()
+    setThemePreference(target)
+    return
+  }
+  const osTheme = getOsTheme()
+  if (
+    resolveTheme(target, osTheme) ===
+      resolveTheme(useSettings.getState().themePreference, osTheme) ||
+    typeof document.startViewTransition !== 'function' ||
+    !CSS.supports('clip-path', 'circle(1px at 0px 0px)') ||
+    reducedMotion.matches ||
+    document.hidden
+  ) {
+    setThemePreference(target)
+    return
+  }
+
+  const root = document.documentElement
+  const bounds = source.getBoundingClientRect()
+  const x = bounds.left + bounds.width / 2
+  const y = bounds.top + bounds.height / 2
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 2
+  root.style.setProperty('--moseek-reveal-x', `${x}px`)
+  root.style.setProperty('--moseek-reveal-y', `${y}px`)
+  root.style.setProperty('--moseek-reveal-radius', `${radius}px`)
+  root.dataset.moseekThemeReveal = ''
+
+  const reset = () => {
+    delete root.dataset.moseekThemeReveal
+    root.style.removeProperty('--moseek-reveal-x')
+    root.style.removeProperty('--moseek-reveal-y')
+    root.style.removeProperty('--moseek-reveal-radius')
+  }
+
+  try {
+    const transition = document.startViewTransition(() => {
+      if (reveal?.transition === transition) {
+        flushSync(() => setThemePreference(target))
+      }
+    })
+    const skip = () => transition.skipTransition()
+    const finish = () => {
+      window.removeEventListener('resize', skip)
+      document.removeEventListener('visibilitychange', skip)
+      reducedMotion.removeEventListener('change', skip)
+      if (reveal?.transition === transition) {
+        reveal = undefined
+        reset()
+      }
+    }
+    reveal = { target, transition, finish }
+    window.addEventListener('resize', skip)
+    document.addEventListener('visibilitychange', skip)
+    reducedMotion.addEventListener('change', skip)
+    void transition.ready.catch(() => {})
+    void transition.finished.then(finish, () => {
+      if (reveal?.transition === transition) {
+        setThemePreference(target)
+      }
+      finish()
+    })
+  } catch {
+    reset()
+    setThemePreference(target)
+  }
+}
+
+export const toggleTheme = (source: HTMLElement) => {
+  const current = resolveTheme(
+    reveal?.target ?? useSettings.getState().themePreference,
+    getOsTheme()
+  )
+  changeTheme(current === 'dark' ? 'light' : 'dark', source)
 }
 
 const syncPageBackground = () => {

@@ -43,6 +43,10 @@
   padding-bottom: 18px;
 }
 
+:global([data-sidebar-collapsed]) .inputContainer {
+  max-width: calc(100% - 120px);
+}
+
 @media not all and (min-width: 768px) {
   .inputContainer {
     padding-bottom: var(--app-composer-bottom, max(12px, env(safe-area-inset-bottom)));

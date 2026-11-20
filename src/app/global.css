@@ -11,6 +11,45 @@
   }
 }
 
+html[data-moseek-theme-reveal]::view-transition {
+  pointer-events: none;
+}
+
+html[data-moseek-theme-reveal]::view-transition-group(root),
+html[data-moseek-theme-reveal]::view-transition-image-pair(root),
+html[data-moseek-theme-reveal]::view-transition-old(root),
+html[data-moseek-theme-reveal]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-moseek-theme-reveal]::view-transition-old(root) {
+  z-index: 1;
+}
+
+html[data-moseek-theme-reveal]::view-transition-new(root) {
+  z-index: 2;
+  animation: moseek-theme-reveal 820ms linear both;
+}
+
+@keyframes moseek-theme-reveal {
+  from {
+    clip-path: circle(0px at var(--moseek-reveal-x) var(--moseek-reveal-y));
+    animation-timing-function: cubic-bezier(0.333, 0, 0.667, 0);
+  }
+
+  50% {
+    clip-path: circle(
+      calc(var(--moseek-reveal-radius) * 0.5) at var(--moseek-reveal-x) var(--moseek-reveal-y)
+    );
+    animation-timing-function: cubic-bezier(0.333, 1, 0.667, 1);
+  }
+
+  to {
+    clip-path: circle(var(--moseek-reveal-radius) at var(--moseek-reveal-x) var(--moseek-reveal-y));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --moseek-popup-animation: none;

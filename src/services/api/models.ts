@@ -9,3 +9,10 @@ export const MODEL_NAMES = {
 
 export const REASONING_LEVELS = ['off', 'low', 'high', 'max'] as const
 export type ReasoningLevel = (typeof REASONING_LEVELS)[number]
+
+export const REASONING_LABELS: Record<ReasoningLevel, string> = {
+  off: 'Off',
+  low: 'Low',
+  high: 'High',
+  max: 'Max',
+}

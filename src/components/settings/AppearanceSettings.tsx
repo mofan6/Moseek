@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import type { ReactNode } from 'react'
+import { changeTheme } from '../../app/theme.js'
 import { useTranslate, type TranslationKey } from '../../i18n/index.js'
 import {
   INTERFACE_FONTS,
@@ -10,7 +11,6 @@ import {
 import {
   setInterfaceFont,
   setPalette,
-  setThemePreference,
   useSettings,
   type ThemePreference,
 } from '../../services/settings.js'
@@ -81,7 +81,7 @@ export const AppearanceSettings = () => {
               type="button"
               aria-pressed={theme === value}
               className={clsx(styles.themeOption, theme === value && styles.themeOptionSelected)}
-              onClick={() => setThemePreference(value)}
+              onClick={(event) => changeTheme(value, event.currentTarget)}
             >
               {icon}
               {t(label)}

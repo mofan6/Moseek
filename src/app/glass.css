@@ -1,14 +1,14 @@
 body {
-  --moseek-atmosphere-hue: var(--palette-hue, 38);
-  --moseek-atmosphere-ink: var(--moseek-atmosphere-hue) var(--palette-neutral, 29%);
+  --moseek-atmosphere-hue: var(--palette-hue, 214);
+  --moseek-atmosphere-ink: var(--moseek-atmosphere-hue) var(--palette-neutral, 21%);
   --moseek-atmosphere-top: hsl(var(--moseek-atmosphere-ink) 98%);
   --moseek-atmosphere-base: hsl(var(--moseek-atmosphere-ink) 94%);
-  --moseek-atmosphere-glow: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 43%) 75% / 58%);
+  --moseek-atmosphere-glow: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 38%) 75% / 58%);
   --moseek-atmosphere-veil: hsl(
-    calc(var(--moseek-atmosphere-hue) + 26) var(--palette-neutral, 29%) 78% / 42%
+    calc(var(--moseek-atmosphere-hue) + 26) var(--palette-neutral, 21%) 78% / 42%
   );
   --moseek-atmosphere-shadow: hsl(
-    calc(var(--moseek-atmosphere-hue) - 16) var(--palette-neutral, 29%) 48% / 14%
+    calc(var(--moseek-atmosphere-hue) - 16) var(--palette-neutral, 21%) 48% / 14%
   );
   --moseek-atmosphere-fold: rgb(255 255 255 / 64%);
   --moseek-glass-input: var(--dsw-specific-input-major);
@@ -21,13 +21,13 @@ body {
 body[data-ds-dark-theme] {
   --moseek-atmosphere-top: hsl(var(--moseek-atmosphere-ink) 14%);
   --moseek-atmosphere-base: hsl(var(--moseek-atmosphere-ink) 8%);
-  --moseek-atmosphere-glow: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 43%) 53% / 44%);
+  --moseek-atmosphere-glow: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 38%) 53% / 44%);
   --moseek-atmosphere-veil: hsl(
-    calc(var(--moseek-atmosphere-hue) + 26) var(--palette-neutral, 29%) 48% / 36%
+    calc(var(--moseek-atmosphere-hue) + 26) var(--palette-neutral, 21%) 48% / 36%
   );
   --moseek-atmosphere-shadow: hsl(var(--moseek-atmosphere-ink) 5% / 75%);
   --moseek-atmosphere-fold: hsl(
-    calc(var(--moseek-atmosphere-hue) - 16) var(--palette-neutral, 29%) 73% / 24%
+    calc(var(--moseek-atmosphere-hue) - 16) var(--palette-neutral, 21%) 73% / 24%
   );
   --moseek-glass-edge: rgb(255 255 255 / 13%);
   --moseek-glass-sheen: rgb(255 255 255 / 10%);

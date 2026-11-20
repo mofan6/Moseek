@@ -97,8 +97,6 @@ body[data-ds-dark-theme] {
 }
 
 body {
-  --moseek-mark-fill: #795a37;
-  --moseek-mark-ink: #f5e8cd;
   --moseek-shadow-ink: 66 42 15;
   --moseek-toast-link: #ecd0a6;
   --dsw-alias-bg-base: #faf7ef;

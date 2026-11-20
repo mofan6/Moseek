@@ -36,16 +36,8 @@
   color: var(--dsw-alias-label-primary);
 }
 
-.mobile .appName::before {
-  content: '';
-  width: 28px;
-  height: 28px;
+.appName img {
   flex-shrink: 0;
-  border-radius: 8px;
-  background:
-    linear-gradient(53deg, transparent 40%, var(--moseek-mark-ink) 41% 56%, transparent 57%) 5px 6px / 10px 16px no-repeat,
-    linear-gradient(-53deg, transparent 40%, var(--moseek-mark-ink) 41% 56%, transparent 57%) 13px 6px / 10px 16px no-repeat,
-    var(--moseek-mark-fill);
 }
 
 .newChat {
@@ -124,7 +116,14 @@
 .bottom {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
   height: 64px;
+  padding-left: 50px;
+}
+
+.mobile .bottom {
+  gap: 8px;
+  padding-left: 0;
 }
 
 .settings {

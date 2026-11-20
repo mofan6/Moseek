@@ -86,7 +86,7 @@ export default defineConfig({
             toType: 'file' as const,
           })
         ),
-        { from: path.resolve(root, 'src/favicon.png'), to: 'favicon.png', toType: 'file' },
+        { from: path.resolve(root, 'src/favicon.svg'), to: 'favicon.svg', toType: 'file' },
       ],
     }),
   ],

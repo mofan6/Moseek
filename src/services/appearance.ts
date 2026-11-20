@@ -1,6 +1,6 @@
 export const PALETTES = [
-  'warm',
   'ocean',
+  'warm',
   'celadon',
   'pine',
   'violet',

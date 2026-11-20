@@ -71,8 +71,6 @@
 body[data-moseek-palette]:not([data-moseek-palette='warm']) {
   --palette-ink: var(--palette-hue) var(--palette-neutral);
   --palette-color: var(--palette-hue) var(--palette-accent);
-  --moseek-mark-fill: hsl(var(--palette-color) 32%);
-  --moseek-mark-ink: hsl(var(--palette-color) 94%);
   --moseek-shadow-ink: 28 32 42;
   --moseek-toast-link: hsl(var(--palette-color) 86%);
   --dsw-alias-bg-base: hsl(var(--palette-ink) 97%);

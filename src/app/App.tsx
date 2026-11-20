@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useTranslate } from '../i18n/index.js'
 import { useSettings } from '../services/settings.js'
 import { useIsMobile, useMobileViewport, usePreventPageScroll } from './viewport.js'
+import { Atmosphere } from './Atmosphere.js'
 import {
   bindChatPersistence,
   initChat,
@@ -16,6 +17,7 @@ import { MobileHeader } from '../components/session/MobileHeader.js'
 import { Welcome } from '../components/session/Welcome.js'
 import { SettingsDialog } from '../components/settings/SettingsDialog.js'
 import { Toast } from '../components/base/Toast.js'
+import { ThemeToggle } from '../components/base/ThemeToggle.js'
 import { showToast } from '../components/base/toastState.js'
 import { onUploadNotice } from '../services/attachments.js'
 import { Button } from '../components/base/Button.js'
@@ -73,9 +75,9 @@ export const App = () => {
   return (
     <>
       <div ref={frameRef} className={styles.frame} data-chat-active={activeId !== null || undefined}>
-        <div className={styles.atmosphere} aria-hidden="true" />
+        <Atmosphere />
         {isMobile ? <MobileSider /> : siderCollapsed ? null : <Sider />}
-        <main className={styles.main}>
+        <main className={styles.main} data-sidebar-collapsed={siderCollapsed || undefined}>
           {saveError ? (
             <div className={styles.saveError} role="alert">
               <span>{t('sessionSaveFailed')}</span>
@@ -129,6 +131,7 @@ export const App = () => {
           </div>
         </main>
         <SearchPanel />
+        {isMobile ? null : <ThemeToggle className={styles.themeShortcut} />}
       </div>
       <SettingsDialog />
       <Toast />

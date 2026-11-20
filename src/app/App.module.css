@@ -21,6 +21,28 @@
   );
 }
 
+.atmosphere canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.atmosphere[data-renderer='webgl'] canvas {
+  opacity: 0.9;
+}
+
+.frame[data-chat-active] .atmosphere[data-renderer='webgl'] canvas {
+  opacity: 0.37;
+}
+
+.atmosphere[data-renderer='webgl']::before,
+.atmosphere[data-renderer='webgl']::after {
+  display: none;
+}
+
 .atmosphere::before,
 .atmosphere::after {
   position: absolute;
@@ -47,7 +69,6 @@
 .frame[data-chat-active] .atmosphere::before,
 .frame[data-chat-active] .atmosphere::after {
   opacity: 0.42;
-  animation-play-state: paused;
 }
 
 @keyframes atmosphere-drift {
@@ -75,6 +96,13 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+}
+
+.themeShortcut {
+  position: absolute;
+  z-index: 30;
+  bottom: 11px;
+  left: 14px;
 }
 
 .content {
