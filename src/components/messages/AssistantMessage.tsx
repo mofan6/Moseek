@@ -4,9 +4,11 @@ import { memo } from 'react'
 import { IconRefreshOutline16, IconWarningOutline16 } from '../base/icons.js'
 import { describeReply } from '../../services/chat/describe.js'
 import { canContinueReply } from '../../services/chat/reply.js'
+import { MODEL_NAMES } from '../../services/api/models.js'
 import { continueReply, regenerateReply } from '../../services/chat/store.js'
 import { stopReadAloud } from '../../services/speech/readAloud.js'
 import type { AssistantMessage as AssistantMessageType } from '../../services/chat/types.js'
+import { getReplyTokenCounts } from '../../services/chat/usage.js'
 import { openSettings } from '../settings/settingsDialogState.js'
 import { IconButton } from '../base/IconButton.js'
 import { Button } from '../base/Button.js'
@@ -16,6 +18,7 @@ import { toggleSearchPanel, useSearchPanel } from '../search/searchPanelState.js
 import { ReadAloudButton } from './ReadAloudButton.js'
 import { CopyButton } from './CopyButton.js'
 import { ReplyArea } from './ReplyArea.js'
+import { TokenUsage } from './TokenUsage.js'
 import { useReplyView } from './useReplyView.js'
 import {
   BranchSwitcher,
@@ -44,6 +47,12 @@ export const AssistantMessage = memo(function AssistantMessage({
   onSelectVersion: SelectMessageVersion
 }) {
   const t = useTranslate()
+  const counts = streaming ? undefined : getReplyTokenCounts(message)
+  const detail = message.model
+    ? [MODEL_NAMES[message.model], message.reasoning && t(`reasoning_${message.reasoning}`)]
+        .filter(Boolean)
+        .join(' · ')
+    : undefined
   const view = useReplyView(message, streaming)
   const panelEntry = useSearchPanel((state) => state.entry)
   const notice = streaming ? null : describeReply(message)
@@ -137,6 +146,9 @@ export const AssistantMessage = memo(function AssistantMessage({
             )}
           </span>
         </div>
+      ) : null}
+      {counts ? (
+        <TokenUsage counts={counts} label={t('replyTokenUsage')} detail={detail} />
       ) : null}
       {streaming ? null : (
         <div className={styles.bottom}>

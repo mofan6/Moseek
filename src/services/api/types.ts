@@ -4,6 +4,8 @@
  * 声明 deepseek_web_search / deepseek_read_url 或设置 safety_check.level 为 high 时进入扩展模式。
  */
 
+import type { ReasoningLevel } from './models.js'
+
 export type ChatModel = 'deepseek-flash' | 'deepseek-v4-pro'
 
 // ---------- 响应：内容块 ----------
@@ -177,6 +179,7 @@ export type CreateMessageRequest = {
   system: string
   messages: MessageParam[]
   thinking: { type: 'enabled' | 'disabled' }
+  output_config?: { effort: Exclude<ReasoningLevel, 'off'> }
   tools: (DeepseekWebSearchTool | DeepseekReadUrlTool)[]
   safety_check: { level: 'high' }
   title?: { enabled: boolean }

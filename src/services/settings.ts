@@ -1,5 +1,7 @@
 import { create } from 'zustand'
+import { DEFAULT_MODEL, type ReasoningLevel } from './api/models.js'
 import type { TtsVoice } from './api/speech.js'
+import type { ChatModel } from './api/types.js'
 import { normalizeLocation, type UserLocation } from './location.js'
 
 export type Locale = 'zh-CN' | 'en-US'
@@ -7,14 +9,15 @@ export type Locale = 'zh-CN' | 'en-US'
 /** 主题偏好；默认跟随系统 */
 export type ThemePreference = 'light' | 'dark' | 'system'
 
-/** 本机设置，存 localStorage：API Key、语言、主题、位置、朗读音色、深度思考与智能搜索开关、侧边栏收起状态 */
+/** 本机设置保存在 localStorage。 */
 type Settings = {
   apiKey: string | null
   locale: Locale
   themePreference: ThemePreference
   location: UserLocation | null
   ttsVoice: TtsVoice
-  thinking: boolean
+  model: ChatModel
+  reasoning: ReasoningLevel
   search: boolean
   siderCollapsed: boolean
 }
@@ -26,6 +29,8 @@ const KEYS = {
   themePreference: 'moseek:theme-preference',
   ttsVoice: 'moseek:tts-voice',
   thinking: 'moseek:thinking',
+  model: 'moseek:model',
+  reasoning: 'moseek:reasoning',
   search: 'moseek:search',
   siderCollapsed: 'moseek:sider-collapsed',
 } as const
@@ -88,13 +93,22 @@ const initialThemePreference = (): ThemePreference => {
 /** 未保存过时使用服务端默认音色 stella（海星） */
 const initialTtsVoice = (): TtsVoice => (read(KEYS.ttsVoice) === 'tide' ? 'tide' : 'stella')
 
+const initialReasoning = (): ReasoningLevel => {
+  const saved = read(KEYS.reasoning)
+  if (saved === 'off' || saved === 'low' || saved === 'high' || saved === 'max') {
+    return saved
+  }
+  return read(KEYS.thinking) === 'true' ? 'high' : 'off'
+}
+
 export const useSettings = create<Settings>(() => ({
   apiKey: read(KEYS.apiKey),
   locale: initialLocale(),
   location: initialLocation(),
   themePreference: initialThemePreference(),
   ttsVoice: initialTtsVoice(),
-  thinking: read(KEYS.thinking) === 'true',
+  model: read(KEYS.model) === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : DEFAULT_MODEL,
+  reasoning: initialReasoning(),
   search: read(KEYS.search) === 'true',
   siderCollapsed: read(KEYS.siderCollapsed) === 'true',
 }))
@@ -128,9 +142,14 @@ export const setApiKey = (apiKey: string) => {
   return true
 }
 
-export const setThinking = (thinking: boolean) => {
-  write(KEYS.thinking, String(thinking))
-  useSettings.setState({ thinking })
+export const setModel = (model: ChatModel) => {
+  write(KEYS.model, model)
+  useSettings.setState({ model })
+}
+
+export const setReasoning = (reasoning: ReasoningLevel) => {
+  write(KEYS.reasoning, reasoning)
+  useSettings.setState({ reasoning })
 }
 
 export const setSearch = (search: boolean) => {

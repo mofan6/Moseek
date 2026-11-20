@@ -1,4 +1,5 @@
 import { BackupError, fail } from './errors.js'
+import { REASONING_LEVELS } from '../../api/models.js'
 import {
   EXPORT_FORMAT_VERSION,
   type ChatMessage,
@@ -197,6 +198,28 @@ const fragment: Read<Fragment | null> = (value) => {
   }
 }
 
+const moseekMetadata: Read<NonNullable<ChatMessage['moseek']>> = (value) => {
+  const item = record(value)
+  const counts = item.token_counts === undefined ? undefined : record(item.token_counts)
+  const latest = item.latest_usage === undefined ? undefined : record(item.latest_usage)
+  return {
+    model: item.model === undefined ? undefined : oneOf('deepseek-flash', 'deepseek-v4-pro')(item.model),
+    reasoning:
+      item.reasoning === undefined ? undefined : oneOf(...REASONING_LEVELS)(item.reasoning),
+    token_counts: counts && {
+      cacheHit: count(counts.cacheHit),
+      cacheMiss: count(counts.cacheMiss),
+      output: count(counts.output),
+    },
+    latest_usage: latest && {
+      input_tokens: count(latest.input_tokens),
+      cache_creation_input_tokens: count(latest.cache_creation_input_tokens),
+      cache_read_input_tokens: count(latest.cache_read_input_tokens),
+      output_tokens: count(latest.output_tokens),
+    },
+  }
+}
+
 const message: Read<ChatMessage> = (value) => {
   const item = record(value)
   return {
@@ -217,6 +240,7 @@ const message: Read<ChatMessage> = (value) => {
     accumulated_token_usage: count(item.accumulated_token_usage),
     inserted_at: time(item.inserted_at),
     fragments: list(fragment)(item.fragments).filter((item): item is Fragment => item !== null),
+    ...(item.moseek === undefined ? {} : { moseek: moseekMetadata(item.moseek) }),
   }
 }
 

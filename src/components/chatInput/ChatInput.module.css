@@ -237,9 +237,29 @@
 .functionRow {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
   padding: 12px;
+}
+
+.modelOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.modelNote {
+  margin: -4px 12px 10px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+@media (max-width: 540px) {
+  .modelOptions {
+    flex-basis: 100%;
+  }
 }
 
 .toggles {
@@ -247,7 +267,7 @@
   flex: 1;
   align-items: center;
   gap: 10px;
-  min-width: 0;
+  min-width: 34px;
 }
 
 .collapsedToggles .toggleLabel {

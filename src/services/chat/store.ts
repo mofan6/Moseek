@@ -1,7 +1,9 @@
 import { create } from 'zustand'
+import { showToast } from '../../components/base/toastState.js'
 import { createId } from '../../utils/id.js'
 import { ApiError, streamMessage } from '../api/client.js'
-import type { ChatModel, CreateMessageRequest } from '../api/types.js'
+import { DEFAULT_MODEL } from '../api/models.js'
+import type { CreateMessageRequest } from '../api/types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
 import { useSettings } from '../settings.js'
@@ -31,9 +33,8 @@ import {
   type SessionSummary,
   type UserMessage,
 } from './types.js'
+import { addTokenCounts, getReplyTokenCounts, toTokenCounts } from './usage.js'
 
-/** deepseek-flash 同时支持深度思考与图片输入 */
-const MODEL: ChatModel = 'deepseek-flash'
 /** 所有生成请求统一携带的助手身份说明 */
 const SYSTEM_PROMPT = '你是 Moseek 的聊天助手，由 DeepSeek 模型提供支持。'
 /** 保留最近打开的详情；当前会话、生成中及尚未成功保存的会话不淘汰。 */
@@ -253,20 +254,29 @@ export const bindChatPersistence = () => {
   }
 }
 
-/** 按当前开关创建回复：深度思考对应 thinking，智能搜索控制 deepseek_web_search。 */
+/** 每条回复保留发送时的模型和推理设置。 */
 const createReply = (): AssistantMessage => {
-  const { thinking, search } = useSettings.getState()
+  const { model, reasoning, search } = useSettings.getState()
   return {
     id: createId(),
     role: 'assistant',
     createdAt: Date.now(),
-    model: MODEL,
-    thinking,
-    search,
+    model,
+    thinking: reasoning !== 'off',
+    reasoning,
+    search: model === 'deepseek-flash' && search,
     prefix: true,
     status: 'pending',
     blocks: [],
   }
+}
+
+const canSendImages = (files: readonly { isImage: boolean }[]): boolean => {
+  if (useSettings.getState().model === 'deepseek-v4-pro' && files.some((file) => file.isImage)) {
+    showToast({ key: 'imagesRequireFlash', type: 'error' })
+    return false
+  }
+  return true
 }
 
 /** 仍在生成中的回复（页面关闭或导出时未结束）按「已停止」处理 */
@@ -554,6 +564,9 @@ export const sendMessage = (targetSessionId: string | null) => {
     return false
   }
   const { text, files } = prepared
+  if (!canSendImages(files)) {
+    return false
+  }
   const now = Date.now()
   let sessionId = targetSessionId
   if (
@@ -631,6 +644,9 @@ export const regenerateReply = (sessionId: string, messageId?: string) => {
   if (question?.role !== 'user' || path[index]?.role !== 'assistant') {
     return
   }
+  if (!canSendImages(question.files)) {
+    return
+  }
   const history = path.slice(0, index - 1)
   const reply = createReply()
   updateSession(sessionId, (s) => ({
@@ -655,6 +671,9 @@ export const editMessage = (sessionId: string, messageId: string, content: strin
   const previous = path[index]
   const text = content.trim()
   if (previous?.role !== 'user' || (!text && previous.files.length === 0)) {
+    return false
+  }
+  if (!canSendImages(previous.files)) {
     return false
   }
   const question: UserMessage = {
@@ -705,13 +724,19 @@ export const continueReply = (sessionId: string, messageId: string) => {
   ) {
     return
   }
-  const { thinking, search } = useSettings.getState()
+  const settings = useSettings.getState()
+  const model = previous.model ?? settings.model
+  const reasoning =
+    previous.reasoning ??
+    (previous.thinking === undefined ? settings.reasoning : previous.thinking ? 'high' : 'off')
   const reply: AssistantMessage = {
     ...previous,
-    // 未记录请求配置的回复，续写时使用默认模型和当前开关。
-    model: previous.model ?? MODEL,
-    thinking: previous.thinking ?? thinking,
-    search: previous.search ?? search,
+    // 未记录请求配置时使用当前设置，旧版已开启的推理沿用服务端的高档。
+    model,
+    reasoning,
+    thinking: reasoning !== 'off',
+    search: model === 'deepseek-flash' && (previous.search ?? settings.search),
+    tokenCounts: getReplyTokenCounts(previous),
     status: 'pending',
     stopReason: undefined,
     stopDetails: undefined,
@@ -960,6 +985,9 @@ const waitForRetry = (attempt: number, signal: AbortSignal) =>
  * 服务端判定 file_id 失效时重新补传后重发，退避重试且次数有上限，超过则按原始报错收尾。
  */
 const streamReply = async (sessionId: string, initial: AssistantMessage, request: Request) => {
+  const model = initial.model ?? DEFAULT_MODEL
+  const reasoning = initial.reasoning ?? (initial.thinking ? 'high' : 'off')
+  const supportsWebTools = model === 'deepseek-flash'
   const controller = new AbortController()
   if (!getSession(sessionId)?.title) {
     titleRequests.add(controller)
@@ -979,6 +1007,7 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
       /** 附件补齐前出错属于上传失败，请求还没有发出 */
       let preparing = true
       let receivedContent = false
+      const previousCounts = reply.tokenCounts
       try {
         const prepared = await prepareFiles(sessionId, request, controller.signal)
         preparing = false
@@ -993,18 +1022,20 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           prepared.history,
           prepared.question,
           prepared.prefix,
-          initial.thinking ?? false,
-          latestReminder
+          reasoning !== 'off',
+          latestReminder,
+          supportsWebTools
         )
         const events = streamMessage(
           useSettings.getState().apiKey ?? '',
           {
-            model: initial.model ?? MODEL,
+            model,
             system: SYSTEM_PROMPT,
             messages,
-            thinking: { type: initial.thinking ? 'enabled' : 'disabled' },
+            thinking: { type: reasoning === 'off' ? 'disabled' : 'enabled' },
+            ...(reasoning === 'off' ? {} : { output_config: { effort: reasoning } }),
             safety_check: SAFETY_CHECK,
-            tools: serverTools(initial.search ?? false),
+            tools: supportsWebTools ? serverTools(initial.search ?? false) : [],
             ...(titleRequests.has(controller) ? { title: { enabled: true } } : {}),
           },
           controller.signal
@@ -1025,6 +1056,14 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             titleRequests.delete(controller)
           }
           reply = applyEvent(reply, event, Date.now(), blockIndexes)
+          if (event.type === 'message_delta' && event.usage) {
+            // 本次流的最终用量为累计值。续写只加到此前已保存的用量上。
+            reply = {
+              ...reply,
+              usage: event.usage,
+              tokenCounts: addTokenCounts(previousCounts, toTokenCounts(event.usage)),
+            }
+          }
           if (document.visibilityState === 'hidden') {
             flush()
           } else {

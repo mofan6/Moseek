@@ -2,6 +2,7 @@ import type { ServerToolUseBlock } from '../../api/types.js'
 import { getVisibleMessages, normalizeSession } from '../branches.js'
 import { describeReply } from '../describe.js'
 import type { AssistantMessage, Message, ReplyBlock, Session, UserMessage } from '../types.js'
+import { getReplyTokenCounts, totalTokens, toTokenCounts } from '../usage.js'
 import { fail } from './errors.js'
 import type {
   ChatMessage,
@@ -199,12 +200,7 @@ const replyStatus = ({ status, stopReason }: AssistantMessage): ChatMessageStatu
 
 /** 最近一次请求的输入（含缓存）与输出之和，即这一条结束时的上下文 token。 */
 const contextTokens = ({ usage }: AssistantMessage) =>
-  usage
-    ? usage.input_tokens +
-      usage.cache_creation_input_tokens +
-      usage.cache_read_input_tokens +
-      usage.output_tokens
-    : 0
+  usage ? totalTokens(toTokenCounts(usage)) : 0
 
 /** 消息按父节点优先重新编号为 1…n，保证 parent_id 小于 id。 */
 const numberMessages = (messages: Message[]) => {
@@ -243,6 +239,7 @@ export const toSessionFile = (original: Session, exportImage: ExportImage): Sess
       parent_id: message.parentId ? (ids.get(message.parentId) ?? null) : null,
     }
     const reply = message.role === 'assistant' ? message : firstReply.get(message.id)
+    const counts = message.role === 'assistant' ? getReplyTokenCounts(message) : undefined
     return {
       ...tree,
       role: message.role === 'user' ? 'USER' : 'ASSISTANT',
@@ -253,6 +250,16 @@ export const toSessionFile = (original: Session, exportImage: ExportImage): Sess
       inserted_at: iso(message.createdAt),
       fragments:
         message.role === 'user' ? userFragments(message, exportImage) : assistantFragments(message),
+      ...(message.role === 'assistant' && (message.model || message.reasoning || counts)
+        ? {
+            moseek: {
+              model: message.model ?? undefined,
+              reasoning: message.reasoning,
+              token_counts: counts,
+              latest_usage: counts ? message.usage : undefined,
+            },
+          }
+        : {}),
     }
   })
   const current = getVisibleMessages(session).at(-1)

@@ -12,6 +12,8 @@ declare const styles: {
   readonly "textarea": string;
   readonly "mirror": string;
   readonly "functionRow": string;
+  readonly "modelOptions": string;
+  readonly "modelNote": string;
   readonly "toggles": string;
   readonly "collapsedToggles": string;
   readonly "toggleLabel": string;

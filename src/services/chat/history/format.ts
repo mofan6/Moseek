@@ -6,6 +6,10 @@
  * - 可空字段用 null 表示；可选字段允许缺省。
  */
 
+import type { ReasoningLevel } from '../../api/models.js'
+import type { ChatModel, MessageUsage } from '../../api/types.js'
+import type { TokenCounts } from '../usage.js'
+
 /** 2026-11-11T02:33:23.270Z */
 export type Iso8601Utc = string
 
@@ -62,6 +66,13 @@ export type ChatMessage = {
   inserted_at: Iso8601Utc
   /** 按发生顺序排列 */
   fragments: Fragment[]
+  /** Moseek 的可选扩展。DeepSeek 导出的文件中可以缺省。 */
+  moseek?: {
+    model?: ChatModel
+    reasoning?: ReasoningLevel
+    token_counts?: TokenCounts
+    latest_usage?: MessageUsage
+  }
 }
 
 /** 用户的提问 */

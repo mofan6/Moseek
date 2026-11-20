@@ -5,9 +5,10 @@ import {
   IconPaperclipOutline16,
   IconSendOutline16,
   IconStopFill16,
-  IconThinkOutline14,
 } from '../base/icons.js'
-import { setSearch, setThinking, useSettings } from '../../services/settings.js'
+import { MODEL_NAMES, REASONING_LEVELS } from '../../services/api/models.js'
+import type { ChatModel } from '../../services/api/types.js'
+import { setModel, setReasoning, setSearch, useSettings } from '../../services/settings.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { sendMessage, stopReply, useChatStore } from '../../services/chat/store.js'
 import {
@@ -22,6 +23,7 @@ import {
 } from '../../services/chat/drafts.js'
 import { stopReadAloud } from '../../services/speech/readAloud.js'
 import { IconButton } from '../base/IconButton.js'
+import { Select } from '../base/Select.js'
 import { Tooltip } from '../base/Tooltip.js'
 import { ensureApiKey } from '../settings/settingsDialogState.js'
 import { DragMask, useFileDrop } from './DragMask.js'
@@ -34,7 +36,12 @@ import { Spectrum } from './Spectrum.js'
 import { useTranslate } from '../../i18n/index.js'
 import styles from './ChatInput.module.css'
 
-/** 输入框：自适应高度的文本框 + 文件 + 深度思考与智能搜索开关 + 语音输入 + 发送 / 停止 */
+const modelOptions = (Object.keys(MODEL_NAMES) as ChatModel[]).map((value) => ({
+  value,
+  label: MODEL_NAMES[value],
+}))
+
+/** 输入框：模型与推理设置、消息、文件、智能搜索、语音和发送操作。 */
 export const ChatInput = memo(function ChatInput({ sessionId }: { sessionId: string | null }) {
   // 切换目标时释放录音、转写和 DOM 状态；文字与附件由草稿服务保留。
   return <Input key={sessionId === null ? 'new' : `session:${sessionId}`} sessionId={sessionId} />
@@ -49,7 +56,9 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const streaming = useChatStore(
     (state) => sessionId !== null && Object.hasOwn(state.streaming, sessionId)
   )
-  const thinking = useSettings((state) => state.thinking)
+  const model = useSettings((state) => state.model)
+  const reasoning = useSettings((state) => state.reasoning)
+  const supportsSearch = model === 'deepseek-flash'
   const importingHistory = useChatStore((state) => state.importingHistory)
   const isMobile = useIsMobile()
   const search = useSettings((state) => state.search)
@@ -200,26 +209,31 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
         </div>
       </div>
       <div className={styles.functionRow}>
-        {/* 深度思考 / 智能搜索开关，tooltip 在按钮上方 */}
+        <div className={styles.modelOptions}>
+          <Select
+            value={model}
+            options={modelOptions}
+            ariaLabel={t('chatModel')}
+            onChange={setModel}
+          />
+          <Select
+            value={reasoning}
+            options={REASONING_LEVELS.map((value) => ({
+              value,
+              label: t(`reasoning_${value}`),
+            }))}
+            ariaLabel={t('reasoningLevel')}
+            onChange={setReasoning}
+          />
+        </div>
         <div ref={togglesRef} className={styles.toggles}>
-          <Tooltip content={t('deactivatedThinkTooltip')}>
+          <Tooltip content={t(supportsSearch ? 'deactivatedSearchTooltip' : 'flashFeatures')}>
             <button
               type="button"
-              className={clsx(styles.toggle, thinking && styles.selected)}
-              aria-label={t('thinkingSwitch')}
-              aria-pressed={thinking}
-              onClick={() => setThinking(!thinking)}
-            >
-              <IconThinkOutline14 />
-              <span className={styles.toggleLabel}>{t('thinkingSwitch')}</span>
-            </button>
-          </Tooltip>
-          <Tooltip content={t('deactivatedSearchTooltip')}>
-            <button
-              type="button"
-              className={clsx(styles.toggle, search && styles.selected)}
+              className={clsx(styles.toggle, supportsSearch && search && styles.selected)}
               aria-label={t('search')}
-              aria-pressed={search}
+              aria-pressed={supportsSearch && search}
+              disabled={!supportsSearch}
               onClick={() => setSearch(!search)}
             >
               <IconGlobeLanguageOutline14 />
@@ -285,6 +299,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
           )}
         </div>
       </div>
+      {!supportsSearch ? <div className={styles.modelNote}>{t('flashFeatures')}</div> : null}
       {dragging ? <DragMask /> : null}
     </div>
   )

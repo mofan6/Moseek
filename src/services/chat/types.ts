@@ -1,5 +1,6 @@
 import type { TranslationMessage } from '../../i18n/index.js'
 import type { ApiErrorKind } from '../api/client.js'
+import type { ReasoningLevel } from '../api/models.js'
 import type {
   ChatModel,
   MessageUsage,
@@ -8,6 +9,7 @@ import type {
   StopReason,
   TextCitation,
 } from '../api/types.js'
+import type { TokenCounts } from './usage.js'
 
 /**
  * 消息附件。id 是本地标识（IndexedDB files 表的主键，原件按它存储，所有引用同一 id 的消息共用一份），
@@ -79,6 +81,7 @@ export type AssistantMessage = MessageBranch & {
   model: ChatModel | null
   /** 请求时是否开启深度思考 */
   thinking?: boolean
+  reasoning?: ReasoningLevel
   /** 请求时是否声明 deepseek_web_search；关闭时仍声明 deepseek_read_url */
   search?: boolean
   /** 本轮请求的系统信息快照；各回答版本独立保存，续写沿用。历史消息中缺省的快照保持为空。 */
@@ -90,8 +93,10 @@ export type AssistantMessage = MessageBranch & {
   blocks: ReplyBlock[]
   stopReason?: StopReason
   stopDetails?: StopDetails
-  /** 最近一次请求的用量，续写后更新 */
+  /** 最近一次有最终用量的请求。 */
   usage?: MessageUsage
+  /** 此回复所有已记录请求的用量，包含续写。 */
+  tokenCounts?: TokenCounts
   error?: {
     /** upload：发送前补传附件失败，请求没有发出 */
     kind: ApiErrorKind | 'upload'

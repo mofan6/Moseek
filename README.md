@@ -6,6 +6,8 @@ In Moseek, open **Settings → API settings**, enter your DeepSeek API key, and 
 
 Moseek retains the demo’s streaming replies, editing and branches, search citations, uploads, voice, language, location, and history management. The browser saves chat history and attachments in IndexedDB. Clearing the site’s browser data removes both the API key and the chat history.
 
+Choose DeepSeek V4.1 Flash or V4 Pro and select off, low, high, or max reasoning in the composer. Reply and chat usage show total tokens, output, cached input, and uncached input. Chat totals include every branch and continuation with usage reported by the API. Moseek history backups preserve the recorded usage.
+
 Use Node.js 22.12+ and pnpm. Run `pnpm install --frozen-lockfile`, then `pnpm dev` to work at `http://127.0.0.1:8090`. Run `pnpm type` for type checking and `pnpm build` to generate `dist/`. The [Pages workflow](.github/workflows/pages.yml) deploys that directory from `main` when GitHub Actions is selected as the publishing source.
 
 See the upstream [MIT license](LICENSE).

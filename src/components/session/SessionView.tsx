@@ -2,8 +2,10 @@ import clsx from 'clsx'
 import { useIsMobile } from '../../app/viewport.js'
 import { useTranslate } from '../../i18n/index.js'
 import type { Session } from '../../services/chat/types.js'
+import { getSessionTokenCounts } from '../../services/chat/usage.js'
 import { ChatInput } from '../chatInput/ChatInput.js'
 import { MessageList } from '../messages/MessageList.js'
+import { TokenUsage } from '../messages/TokenUsage.js'
 import { MobileHeader } from './MobileHeader.js'
 import styles from './SessionView.module.css'
 
@@ -20,6 +22,7 @@ export const SessionView = ({
   const t = useTranslate()
   const isMobile = useIsMobile()
   const title = session.title || t('untitledChat')
+  const totals = getSessionTokenCounts(session.messages)
   return (
     <div className={styles.view}>
       {isMobile ? (
@@ -31,6 +34,11 @@ export const SessionView = ({
           </div>
         </div>
       )}
+      {totals ? (
+        <div className={styles.usageSummary}>
+          <TokenUsage counts={totals} label={t('sessionTokenUsage')} />
+        </div>
+      ) : null}
       <MessageList
         session={session}
         streaming={streaming}
