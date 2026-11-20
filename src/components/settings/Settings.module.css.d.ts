@@ -29,6 +29,10 @@ declare const styles: {
   readonly "description": string;
   readonly "error": string;
   readonly "apiKey": string;
+  readonly "balance": string;
+  readonly "balanceHeader": string;
+  readonly "balanceAmounts": string;
+  readonly "balanceTotal": string;
   readonly "apiKeySaved": string;
   readonly "apiKeyInput": string;
   readonly "apiKeyMask": string;

@@ -29,6 +29,7 @@ import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
+import { ApiBalance } from './ApiBalance.js'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { AppearanceSettings } from './AppearanceSettings.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
@@ -105,6 +106,9 @@ const SettingsContent = () => {
             <>
               <ApiKeyField editor={apiKeyEditor} />
               {isMobile ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
+              {apiKeyEditor.apiKey ? (
+                <ApiBalance key={apiKeyEditor.apiKey} apiKey={apiKeyEditor.apiKey} />
+              ) : null}
             </>
           ) : (
             <>
