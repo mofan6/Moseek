@@ -29,15 +29,6 @@
   margin-left: 113px;
 }
 
-.usageSummary {
-  flex-shrink: 0;
-  width: calc(var(--message-list-max-width) - 64px);
-  max-width: calc(100% - 32px);
-  margin-inline: auto;
-  padding-block: 2px 8px;
-  border-bottom: 1px solid var(--dsw-alias-border-l1);
-}
-
 .inputContainer {
   display: flex;
   flex-shrink: 0;

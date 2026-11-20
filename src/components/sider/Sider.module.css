@@ -32,18 +32,18 @@
   letter-spacing: -0.04em;
   white-space: nowrap;
   color: var(--dsw-alias-label-primary);
+}
 
-  &::before {
-    content: '';
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    background:
-      linear-gradient(53deg, transparent 40%, var(--moseek-mark-ink) 41% 56%, transparent 57%) 5px 6px / 10px 16px no-repeat,
-      linear-gradient(-53deg, transparent 40%, var(--moseek-mark-ink) 41% 56%, transparent 57%) 13px 6px / 10px 16px no-repeat,
-      var(--moseek-mark-fill);
-  }
+.mobile .appName::before {
+  content: '';
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background:
+    linear-gradient(53deg, transparent 40%, var(--moseek-mark-ink) 41% 56%, transparent 57%) 5px 6px / 10px 16px no-repeat,
+    linear-gradient(-53deg, transparent 40%, var(--moseek-mark-ink) 41% 56%, transparent 57%) 13px 6px / 10px 16px no-repeat,
+    var(--moseek-mark-fill);
 }
 
 .newChat {

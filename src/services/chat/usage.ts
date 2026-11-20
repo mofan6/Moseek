@@ -1,5 +1,5 @@
 import type { MessageUsage } from '../api/types.js'
-import type { AssistantMessage, Message } from './types.js'
+import type { AssistantMessage } from './types.js'
 
 export type TokenCounts = {
   cacheHit: number
@@ -34,15 +34,4 @@ export const getReplyTokenCounts = (reply: AssistantMessage): TokenCounts | unde
     return toTokenCounts(reply.usage)
   }
   return undefined
-}
-
-export const getSessionTokenCounts = (messages: Message[]): TokenCounts | undefined => {
-  let total: TokenCounts | undefined
-  for (const message of messages) {
-    const counts = message.role === 'assistant' ? getReplyTokenCounts(message) : undefined
-    if (counts) {
-      total = addTokenCounts(total, counts)
-    }
-  }
-  return total
 }

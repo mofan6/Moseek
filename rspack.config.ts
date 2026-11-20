@@ -75,8 +75,8 @@ export default defineConfig({
       patterns: [
         { from: path.resolve(root, 'LICENSE'), to: 'LICENSE', toType: 'file' },
         {
-          from: path.resolve(root, 'src/assets/fonts/Inter-OFL.txt'),
-          to: 'INTER-OFL.txt',
+          from: path.resolve(root, 'src/assets/fonts/HarmonyOS-Sans-License.txt'),
+          to: 'HARMONYOS-SANS-LICENSE.txt',
           toType: 'file',
         },
         { from: path.resolve(root, 'src/favicon.png'), to: 'favicon.png', toType: 'file' },

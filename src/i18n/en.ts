@@ -14,6 +14,8 @@ export const en = {
   sessionDeleteFailed: 'Unable to delete this chat. Please try again.',
   settings: 'Settings',
   appName: 'Moseek',
+  interfaceFont: 'Interface font',
+  fontLicenseLink: 'HarmonyOS Sans SC Medium font license',
   deleteSessionModalContentTitle: 'Delete chat?',
   deleteSessionWithFilesDescription:
     'This chat and its uploaded files will be permanently deleted and cannot be recovered. Delete this chat?',
@@ -154,7 +156,6 @@ export const en = {
   flashFeatures: 'Switch to Flash for web search and image input.',
   imagesRequireFlash: 'This message contains images. Switch to Flash to send it.',
   replyTokenUsage: 'Reply usage',
-  sessionTokenUsage: 'Recorded chat usage',
   totalTokenCount: 'Total tokens',
   cachedTokenCount: 'Cache hit',
   uncachedTokenCount: 'Cache miss',

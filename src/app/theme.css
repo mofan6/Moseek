@@ -1,19 +1,18 @@
-/* Latin variable subset from Fontsource Inter 5.3.0, distributed under SIL OFL 1.1. */
+/* Unmodified HarmonyOS Sans SC Medium from the Huawei design resource bundle. */
 @font-face {
-  font-family: Inter;
+  font-family: 'HarmonyOS Sans SC';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url('../assets/fonts/inter-latin-wght-normal.woff2') format('woff2');
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
-    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
-    U+FEFF, U+FFFD;
+  font-weight: 500;
+  src:
+    local('HarmonyOS Sans SC Medium'),
+    local('HarmonyOS_Sans_SC_Medium'),
+    url('../assets/fonts/HarmonyOS_Sans_SC_Medium.ttf') format('truetype');
 }
 
 :root {
   --dsw-font-family:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'HarmonyOS Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Open Sans', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
   font-variant-ligatures: no-contextual;
 }
@@ -232,15 +231,15 @@ body {
 
   --dsw-font-markdown-h4: 600 16px/28px var(--dsw-font-family);
 
-  --dsw-font-markdown-base: 16px/28px var(--dsw-font-family);
+  --dsw-font-markdown-base: 500 16px/28px var(--dsw-font-family);
 
   --dsw-font-markdown-base-strong: 600 16px/28px var(--dsw-font-family);
 
-  --dsw-font-markdown-table: 15px/25px var(--dsw-font-family);
+  --dsw-font-markdown-table: 500 15px/25px var(--dsw-font-family);
 
   --dsw-font-markdown-table-head: 500 15px/25px var(--dsw-font-family);
 
-  --dsw-font-markdown-small: 14px/24px var(--dsw-font-family);
+  --dsw-font-markdown-small: 500 14px/24px var(--dsw-font-family);
 
   --dsw-font-markdown-small-strong: 600 14px/24px var(--dsw-font-family);
 
@@ -250,5 +249,5 @@ body {
 
   --dsw-font-s-strong-14: 500 14px/22px var(--dsw-font-family);
 
-  --dsw-font-xs-13: 13px/20px var(--dsw-font-family);
+  --dsw-font-xs-13: 500 13px/20px var(--dsw-font-family);
 }

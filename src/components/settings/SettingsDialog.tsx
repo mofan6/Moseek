@@ -102,6 +102,21 @@ const SettingsContent = () => {
               <LocaleSetting />
               <TtsVoiceSetting />
               <LocationSetting />
+              <SettingCell
+                label={t('interfaceFont')}
+                status={null}
+                action={
+                  <a
+                    className={styles.fontLicense}
+                    href="./HARMONYOS-SANS-LICENSE.txt"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={t('fontLicenseLink')}
+                  >
+                    HarmonyOS Sans SC Medium
+                  </a>
+                }
+              />
             </>
           ) : section === 'api' ? (
             <>

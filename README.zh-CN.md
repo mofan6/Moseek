@@ -14,7 +14,7 @@ API Key 保存在浏览器的 localStorage，历史对话和附件保存在 Inde
 
 - 流式回答、停止生成、继续、重新生成、编辑提问和切换回复分支。
 - 在输入框选择 DeepSeek V4.1 Flash 或 V4 Pro，以及关闭、低、高、最高推理。选择保存在本机浏览器。
-- 回复和会话显示已记录的 Token 总量、输出、输入缓存命中与未命中。会话统计包含所有分支和继续生成。历史备份保留 Moseek 记录的用量。
+- 每条回复显示已记录的 Token 总量、输出、输入缓存命中与未命中，包含该回复的续写用量。历史备份保留 Moseek 记录的用量。
 - 深度思考、联网搜索、引用、附件、语音输入与朗读。
 - 主题跟随系统或手动选择深浅色，支持简体中文和英文，提供朗读音色与位置选择。
 - 对话保存在当前浏览器。数据管理支持导入、导出和清空历史记录。导入前会要求确认，成功后替换本机历史。
@@ -26,3 +26,5 @@ API Key 保存在浏览器的 localStorage，历史对话和附件保存在 Inde
 将仓库的 Pages 来源设为 GitHub Actions。推送至 `main` 会由 [Pages 工作流](.github/workflows/pages.yml) 构建并部署 `dist/`。
 
 保留原项目的 [MIT 许可证](LICENSE)。
+
+界面采用华为 HarmonyOS Sans SC Medium，字体文件和[许可协议](src/assets/fonts/HarmonyOS-Sans-License.txt)来自[华为设计资源](https://developer.huawei.com/consumer/cn/design/resource-V1)。

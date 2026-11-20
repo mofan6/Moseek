@@ -108,6 +108,11 @@
   line-height: 22px;
 }
 
+.fontLicense {
+  color: var(--dsw-alias-brand-text);
+  text-underline-offset: 2px;
+}
+
 .uploadButton {
   padding: 0 13px;
 }
