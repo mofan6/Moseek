@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react'
+import type { InterfaceFont, Palette } from '../services/appearance.js'
 import { useSettings, type ThemePreference } from '../services/settings.js'
+import { restoreCustomFont } from './localFont.js'
 
 export type Theme = 'light' | 'dark'
 
@@ -29,12 +31,13 @@ const syncPageBackground = () => {
 }
 
 /** 同步页面主题、根画布背景和支持 theme-color 的浏览器栏。 */
-const applyTheme = (theme: Theme) => {
+const applyTheme = (theme: Theme, palette: Palette) => {
   const body = document.body
   // 主题切换帧禁用过渡，使页面颜色同步更新
   body.classList.add('change-theme')
   body.classList.toggle('dark', theme === 'dark')
   body.classList.toggle('light', theme === 'light')
+  body.dataset.moseekPalette = palette
   if (theme === 'dark') {
     body.setAttribute('data-ds-dark-theme', 'dark')
   } else {
@@ -51,12 +54,25 @@ const applyTheme = (theme: Theme) => {
 }
 
 let appliedTheme: Theme | null = null
+let appliedPalette: Palette | null = null
+let appliedFont: InterfaceFont | null = null
 
 const syncTheme = () => {
-  const theme = resolveTheme(useSettings.getState().themePreference, getOsTheme())
-  if (theme !== appliedTheme) {
+  const { themePreference, palette, interfaceFont } = useSettings.getState()
+  const theme = resolveTheme(themePreference, getOsTheme())
+  if (theme !== appliedTheme || palette !== appliedPalette) {
     appliedTheme = theme
-    applyTheme(theme)
+    appliedPalette = palette
+    applyTheme(theme, palette)
+  }
+  if (interfaceFont !== appliedFont) {
+    appliedFont = interfaceFont
+    document.documentElement.dataset.moseekFont = interfaceFont
+    if (interfaceFont === 'custom') {
+      void restoreCustomFont().catch(() => {
+        // The settings view reports load failures; the UI uses its font fallback.
+      })
+    }
   }
 }
 

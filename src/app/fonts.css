@@ -1,0 +1,74 @@
+/* Unmodified Huawei design resource font. */
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src:
+    local('HarmonyOS Sans SC Medium'),
+    local('HarmonyOS_Sans_SC_Medium'),
+    url('../assets/fonts/HarmonyOS_Sans_SC_Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Moseek iQOO';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src:
+    local('iQOO Sans Medium'), local('iQOOSans-Medium'), local('iQOO Sans Regular'),
+    local('iQOO Sans SC'), local('iQOO Sans'), local('iQOO Type Medium'), local('iQOOType-Medium'),
+    local('iQOO Type Regular'), local('iQOOType-Regular'), local('iQOO Type');
+}
+
+@font-face {
+  font-family: 'Moseek Source Han Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 250 900;
+  src:
+    local('Source Han Sans CN VF'),
+    url('../assets/fonts/SourceHanSansCN-VF.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Moseek Source Han Serif';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src:
+    local('Source Han Serif CN VF'),
+    url('../assets/fonts/SourceHanSerifCN-VF.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Moseek Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../assets/fonts/InterVariable.woff2') format('woff2');
+}
+
+:root[data-moseek-font='iqoo'] {
+  --moseek-font-ui: 'Moseek iQOO', 'HarmonyOS Sans SC';
+}
+
+:root[data-moseek-font='sourceHanSans'] {
+  --moseek-font-ui: 'Moseek Source Han Sans', 'HarmonyOS Sans SC';
+}
+
+:root[data-moseek-font='sourceHanSerif'] {
+  --moseek-font-ui: 'Moseek Source Han Serif', 'HarmonyOS Sans SC';
+}
+
+:root[data-moseek-font='inter'] {
+  --moseek-font-ui: 'Moseek Inter', 'HarmonyOS Sans SC';
+}
+
+:root[data-moseek-font='system'] {
+  --moseek-font-ui: system-ui;
+}
+
+:root[data-moseek-font='custom'] {
+  --moseek-font-ui: 'Moseek Custom', 'HarmonyOS Sans SC';
+}

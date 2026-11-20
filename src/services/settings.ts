@@ -3,6 +3,7 @@ import { DEFAULT_MODEL, type ReasoningLevel } from './api/models.js'
 import type { TtsVoice } from './api/speech.js'
 import type { ChatModel } from './api/types.js'
 import { normalizeLocation, type UserLocation } from './location.js'
+import { INTERFACE_FONTS, PALETTES, type InterfaceFont, type Palette } from './appearance.js'
 
 export type Locale = 'zh-CN' | 'en-US'
 
@@ -15,6 +16,8 @@ type Settings = {
   apiKey: string | null
   locale: Locale
   themePreference: ThemePreference
+  palette: Palette
+  interfaceFont: InterfaceFont
   location: UserLocation | null
   ttsVoice: TtsVoice
   model: ChatModel
@@ -29,6 +32,8 @@ const KEYS = {
   locale: 'moseek:locale',
   location: 'moseek:location',
   themePreference: 'moseek:theme-preference',
+  palette: 'moseek:palette',
+  interfaceFont: 'moseek:interface-font',
   ttsVoice: 'moseek:tts-voice',
   thinking: 'moseek:thinking',
   model: 'moseek:model',
@@ -44,6 +49,11 @@ const read = (key: string) => {
   } catch {
     return null
   }
+}
+
+const readChoice = <T extends string>(key: string, choices: readonly [T, ...T[]]): T => {
+  const saved = read(key)
+  return choices.find((value) => value === saved) ?? choices[0]
 }
 
 const write = (key: string, value: string | null) => {
@@ -109,6 +119,8 @@ export const useSettings = create<Settings>(() => ({
   locale: initialLocale(),
   location: initialLocation(),
   themePreference: initialThemePreference(),
+  palette: readChoice(KEYS.palette, PALETTES),
+  interfaceFont: readChoice(KEYS.interfaceFont, INTERFACE_FONTS),
   ttsVoice: initialTtsVoice(),
   model: read(KEYS.model) === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : DEFAULT_MODEL,
   reasoning: initialReasoning(),
@@ -131,6 +143,16 @@ export const setLocation = (value: UserLocation | null) => {
 export const setThemePreference = (themePreference: ThemePreference) => {
   write(KEYS.themePreference, themePreference)
   useSettings.setState({ themePreference })
+}
+
+export const setPalette = (palette: Palette) => {
+  write(KEYS.palette, palette)
+  useSettings.setState({ palette })
+}
+
+export const setInterfaceFont = (interfaceFont: InterfaceFont) => {
+  write(KEYS.interfaceFont, interfaceFont)
+  useSettings.setState({ interfaceFont })
 }
 
 export const setTtsVoice = (ttsVoice: TtsVoice) => {

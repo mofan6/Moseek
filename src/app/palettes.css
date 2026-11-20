@@ -1,0 +1,163 @@
+[data-moseek-palette='warm'] {
+  --palette-hue: 38;
+  --palette-accent: 65%;
+  --palette-neutral: 43%;
+  --palette-swatch-fill: #8b541b;
+  --palette-swatch-bg: #faf7ef;
+  --palette-swatch-strip: #e8d8b8;
+}
+
+[data-moseek-palette='ocean'] {
+  --palette-hue: 214;
+  --palette-accent: 63%;
+  --palette-neutral: 28%;
+}
+
+[data-moseek-palette='celadon'] {
+  --palette-hue: 174;
+  --palette-accent: 57%;
+  --palette-neutral: 24%;
+}
+
+[data-moseek-palette='pine'] {
+  --palette-hue: 138;
+  --palette-accent: 45%;
+  --palette-neutral: 22%;
+}
+
+[data-moseek-palette='violet'] {
+  --palette-hue: 267;
+  --palette-accent: 49%;
+  --palette-neutral: 27%;
+}
+
+[data-moseek-palette='rose'] {
+  --palette-hue: 338;
+  --palette-accent: 53%;
+  --palette-neutral: 27%;
+}
+
+[data-moseek-palette='maple'] {
+  --palette-hue: 17;
+  --palette-accent: 66%;
+  --palette-neutral: 32%;
+}
+
+[data-moseek-palette='graphite'] {
+  --palette-hue: 220;
+  --palette-accent: 9%;
+  --palette-neutral: 8%;
+}
+
+[data-moseek-palette]:not([data-moseek-palette='warm']) {
+  --palette-swatch-fill: hsl(var(--palette-hue) var(--palette-accent) 35%);
+  --palette-swatch-bg: hsl(var(--palette-hue) var(--palette-neutral) 97%);
+  --palette-swatch-strip: hsl(var(--palette-hue) var(--palette-accent) 86%);
+}
+
+[data-ds-dark-theme] [data-moseek-palette]:not([data-moseek-palette='warm']) {
+  --palette-swatch-fill: hsl(var(--palette-hue) var(--palette-accent) 73%);
+  --palette-swatch-bg: hsl(var(--palette-hue) var(--palette-neutral) 12%);
+  --palette-swatch-strip: hsl(var(--palette-hue) var(--palette-accent) 26%);
+}
+
+[data-ds-dark-theme] [data-moseek-palette='warm'] {
+  --palette-swatch-fill: #cb9a52;
+  --palette-swatch-bg: #211b14;
+  --palette-swatch-strip: #594128;
+}
+
+/* The original warm palette is defined in theme.css. The seven alternatives share color roles. */
+body[data-moseek-palette]:not([data-moseek-palette='warm']) {
+  --palette-ink: var(--palette-hue) var(--palette-neutral);
+  --palette-color: var(--palette-hue) var(--palette-accent);
+  --moseek-wash: hsl(var(--palette-color) 85%);
+  --moseek-mark-fill: hsl(var(--palette-color) 32%);
+  --moseek-mark-ink: hsl(var(--palette-color) 94%);
+  --moseek-shadow-ink: 28 32 42;
+  --moseek-toast-link: hsl(var(--palette-color) 86%);
+  --dsw-alias-bg-base: hsl(var(--palette-ink) 97%);
+  --dsw-alias-bg-layer-2: hsl(var(--palette-ink) 99%);
+  --dsw-alias-bg-layer-3: hsl(var(--palette-ink) 99.5%);
+  --dsw-alias-bg-skeleton: hsl(var(--palette-ink) 25% / 6%);
+  --dsw-alias-border-inverted: hsl(var(--palette-ink) 25% / 8%);
+  --dsw-alias-border-l1: hsl(var(--palette-ink) 25% / 10%);
+  --dsw-alias-border-l2-darkmode-thin: hsl(var(--palette-ink) 83%);
+  --dsw-alias-border-l2: hsl(var(--palette-ink) 87%);
+  --dsw-alias-border-l3: hsl(var(--palette-ink) 78%);
+  --dsw-alias-brand-primary: hsl(var(--palette-color) 31%);
+  --dsw-alias-brand-text: hsl(var(--palette-color) 28%);
+  --dsw-alias-button-contrast-fill: hsl(var(--palette-ink) 30%);
+  --dsw-alias-button-ghost-active-border: hsl(var(--palette-color) 65%);
+  --dsw-alias-button-ghost-active-fill: hsl(var(--palette-color) 91%);
+  --dsw-alias-button-ghost-active-hover: hsl(var(--palette-color) 87%);
+  --dsw-alias-button-primary-fill: var(--dsw-alias-brand-primary);
+  --dsw-alias-button-primary-hover: hsl(var(--palette-color) 27%);
+  --dsw-alias-interactive-bg-active: hsl(var(--palette-color) 26% / 11%);
+  --dsw-alias-interactive-bg-hover: hsl(var(--palette-color) 26% / 7%);
+  --dsw-alias-interactive-bg-hover-accent: hsl(var(--palette-color) 26% / 14%);
+  --dsw-alias-label-caption: hsl(var(--palette-ink) 38%);
+  --dsw-alias-label-dimmed: hsl(var(--palette-ink) 90%);
+  --dsw-alias-label-primary: hsl(var(--palette-ink) 13%);
+  --dsw-alias-label-secondary: hsl(var(--palette-ink) 29%);
+  --dsw-alias-label-tertiary: hsl(var(--palette-ink) 38%);
+  --dsw-alias-markdown-citation: hsl(var(--palette-color) 91%);
+  --dsw-alias-markdown-code-block-banner: hsl(var(--palette-ink) 91%);
+  --dsw-alias-markdown-code-block: hsl(var(--palette-ink) 95%);
+  --dsw-alias-markdown-inline-code: hsl(var(--palette-ink) 91%);
+  --dsw-alias-markdown-placeholder: hsl(var(--palette-ink) 94%);
+  --dsw-alias-markdown-tag: var(--dsw-alias-markdown-inline-code);
+  --dsw-alias-toast-bg: hsl(var(--palette-ink) 22%);
+  --dsw-alias-tooltip-bg: var(--dsw-alias-toast-bg);
+  --dsw-specific-bubble: hsl(var(--palette-color) 91%);
+  --dsw-specific-input-major: var(--dsw-alias-bg-layer-2);
+  --dsw-specific-login-input: hsl(var(--palette-ink) 95%);
+  --dsw-specific-selector: hsl(var(--palette-ink) 93%);
+  --dsw-specific-sidebar-fill: hsl(var(--palette-ink) 93%);
+  --dsw-specific-sidebar-nav-item-active-accent: hsl(var(--palette-color) 89%);
+  --dsw-specific-sidebar-nav-item-hover: hsl(var(--palette-ink) 90%);
+}
+
+body[data-ds-dark-theme][data-moseek-palette]:not([data-moseek-palette='warm']) {
+  --moseek-wash: hsl(var(--palette-color) 22%);
+  --moseek-shadow-ink: 0 0 0;
+  --dsw-alias-bg-base: hsl(var(--palette-ink) 11%);
+  --dsw-alias-bg-layer-2: hsl(var(--palette-ink) 15%);
+  --dsw-alias-bg-layer-3: hsl(var(--palette-ink) 19%);
+  --dsw-alias-bg-skeleton: hsl(var(--palette-ink) 92% / 8%);
+  --dsw-alias-border-inverted: hsl(var(--palette-ink) 92% / 8%);
+  --dsw-alias-border-l1: hsl(var(--palette-ink) 92% / 9%);
+  --dsw-alias-border-l2-darkmode-thin: hsl(var(--palette-ink) 29%);
+  --dsw-alias-border-l2: hsl(var(--palette-ink) 29%);
+  --dsw-alias-border-l3: hsl(var(--palette-ink) 34%);
+  --dsw-alias-brand-primary: hsl(var(--palette-color) 68%);
+  --dsw-alias-brand-text: hsl(var(--palette-color) 78%);
+  --dsw-alias-button-contrast-fill: hsl(var(--palette-ink) 92%);
+  --dsw-alias-button-ghost-active-border: hsl(var(--palette-color) 51%);
+  --dsw-alias-button-ghost-active-fill: hsl(var(--palette-color) 21%);
+  --dsw-alias-button-ghost-active-hover: hsl(var(--palette-color) 25%);
+  --dsw-alias-button-primary-fill: hsl(var(--palette-color) 30%);
+  --dsw-alias-button-primary-hover: hsl(var(--palette-color) 26%);
+  --dsw-alias-interactive-bg-active: hsl(var(--palette-color) 90% / 13%);
+  --dsw-alias-interactive-bg-hover: hsl(var(--palette-color) 90% / 8%);
+  --dsw-alias-interactive-bg-hover-accent: hsl(var(--palette-color) 90% / 17%);
+  --dsw-alias-label-caption: hsl(var(--palette-ink) 70%);
+  --dsw-alias-label-dimmed: hsl(var(--palette-ink) 25%);
+  --dsw-alias-label-primary-inverted: hsl(var(--palette-ink) 13%);
+  --dsw-alias-label-primary: hsl(var(--palette-ink) 95%);
+  --dsw-alias-label-secondary: hsl(var(--palette-ink) 82%);
+  --dsw-alias-label-tertiary: hsl(var(--palette-ink) 73%);
+  --dsw-alias-markdown-citation: hsl(var(--palette-color) 22%);
+  --dsw-alias-markdown-code-block-banner: var(--dsw-alias-bg-layer-3);
+  --dsw-alias-markdown-code-block: hsl(var(--palette-ink) 15%);
+  --dsw-alias-markdown-inline-code: hsl(var(--palette-ink) 23%);
+  --dsw-alias-markdown-placeholder: var(--dsw-alias-bg-layer-3);
+  --dsw-alias-toast-bg: hsl(var(--palette-ink) 24%);
+  --dsw-specific-bubble: hsl(var(--palette-color) 20%);
+  --dsw-specific-input-major: hsl(var(--palette-ink) 16%);
+  --dsw-specific-login-input: hsl(var(--palette-ink) 14%);
+  --dsw-specific-selector: hsl(var(--palette-ink) 21%);
+  --dsw-specific-sidebar-fill: hsl(var(--palette-ink) 13%);
+  --dsw-specific-sidebar-nav-item-active-accent: hsl(var(--palette-color) 23%);
+  --dsw-specific-sidebar-nav-item-hover: hsl(var(--palette-ink) 19%);
+}

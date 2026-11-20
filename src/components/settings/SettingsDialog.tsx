@@ -1,11 +1,8 @@
 import clsx from 'clsx'
 import { useRef, useState, type ReactNode } from 'react'
 import {
-  IconDarkOutline16,
   IconDataOutline16,
   IconDownloadOutline16,
-  IconFollowsystemOutline16,
-  IconLightOutline16,
   IconLinkOutline16,
   IconSettingsOutline16,
   IconUploadOutline14,
@@ -24,10 +21,8 @@ import {
   setContextMode,
   setLocale,
   setLocation,
-  setThemePreference,
   setTtsVoice,
   useSettings,
-  type ThemePreference,
 } from '../../services/settings.js'
 import { useTranslate, type TranslationKey, type TranslationMessage } from '../../i18n/index.js'
 import { Button } from '../base/Button.js'
@@ -35,6 +30,7 @@ import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
+import { AppearanceSettings } from './AppearanceSettings.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
 
@@ -99,26 +95,11 @@ const SettingsContent = () => {
         <div role="tabpanel" className={styles.content}>
           {section === 'general' ? (
             <>
-              <ThemeSetting />
+              <AppearanceSettings />
               <LocaleSetting />
               <ContextModeSetting />
               <TtsVoiceSetting />
               <LocationSetting />
-              <SettingCell
-                label={t('interfaceFont')}
-                status={null}
-                action={
-                  <a
-                    className={styles.fontLicense}
-                    href="./HARMONYOS-SANS-LICENSE.txt"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={t('fontLicenseLink')}
-                  >
-                    HarmonyOS Sans SC Medium
-                  </a>
-                }
-              />
             </>
           ) : section === 'api' ? (
             <>
@@ -386,57 +367,6 @@ const ImportConfirm = ({
     >
       <div className={styles.importConfirmText}>{t('historyImportConfirmDescription')}</div>
     </Modal>
-  )
-}
-
-const themeOptions: { value: ThemePreference; label: TranslationKey; icon: ReactNode }[] = [
-  {
-    value: 'light',
-    label: 'avatarMenuSettingsDialogThemeSelectLightOption',
-    icon: <IconLightOutline16 />,
-  },
-  {
-    value: 'dark',
-    label: 'avatarMenuSettingsDialogThemeSelectDarkOption',
-    icon: <IconDarkOutline16 />,
-  },
-  {
-    value: 'system',
-    label: 'avatarMenuSettingsDialogThemeSelectSystemOption',
-    icon: <IconFollowsystemOutline16 />,
-  },
-]
-
-/**
- * 主题项：标题下方浅色 / 深色 / 跟随系统三个选块。
- * 与下方语言选项连续排列。
- */
-const ThemeSetting = () => {
-  const t = useTranslate()
-  const themePreference = useSettings((state) => state.themePreference)
-  const label = t('avatarMenuSettingsDialogThemeItemLabel')
-  return (
-    <div className={styles.theme}>
-      {label}
-      <div role="radiogroup" aria-label={label} className={styles.themeOptions}>
-        {themeOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={themePreference === option.value}
-            className={clsx(
-              styles.themeOption,
-              themePreference === option.value && styles.themeOptionSelected
-            )}
-            onClick={() => setThemePreference(option.value)}
-          >
-            {option.icon}
-            {t(option.label)}
-          </button>
-        ))}
-      </div>
-    </div>
   )
 }
 

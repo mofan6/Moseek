@@ -10,6 +10,10 @@ declare const styles: {
   readonly "text": string;
   readonly "label": string;
   readonly "fontLicense": string;
+  readonly "fontRow": string;
+  readonly "fontSelect": string;
+  readonly "fontLocal": string;
+  readonly "fontCredits": string;
   readonly "uploadButton": string;
   readonly "locationCell": string;
   readonly "locationSelectors": string;
@@ -20,6 +24,9 @@ declare const styles: {
   readonly "themeOptions": string;
   readonly "themeOption": string;
   readonly "themeOptionSelected": string;
+  readonly "paletteOptions": string;
+  readonly "paletteOption": string;
+  readonly "paletteSample": string;
   readonly "description": string;
   readonly "error": string;
   readonly "apiKey": string;
