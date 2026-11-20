@@ -44,7 +44,7 @@
 
 /* 整条提示不拦截点击，只有链接可点 */
 .link {
-  color: var(--dsw-static-blue-400);
+  color: var(--moseek-toast-link);
   text-decoration: none;
   pointer-events: auto;
 

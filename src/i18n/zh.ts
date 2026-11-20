@@ -1,6 +1,5 @@
 export const zh = {
   welcomeMessageChat250808: '想聊点什么？',
-  contentCaveat: '内容由 AI 生成，请仔细甄别',
   expandSiderbarButton: '打开边栏',
   collapseSiderbarButton: '收起边栏',
   newChat: '开启新对话',
@@ -144,10 +143,6 @@ export const zh = {
   conversationMessages: '对话消息',
   chatModel: '模型',
   reasoningLevel: '推理强度',
-  reasoning_off: '推理关闭',
-  reasoning_low: '低推理',
-  reasoning_high: '高推理',
-  reasoning_max: '最高推理',
   flashFeatures: '使用 Flash 可联网搜索和识别图片。',
   imagesRequireFlash: '这条消息包含图片，请切换到 Flash 后发送。',
   replyTokenUsage: '本条回复用量',

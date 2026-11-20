@@ -74,6 +74,11 @@ export default defineConfig({
     new rspack.CopyRspackPlugin({
       patterns: [
         { from: path.resolve(root, 'LICENSE'), to: 'LICENSE', toType: 'file' },
+        {
+          from: path.resolve(root, 'src/assets/fonts/Inter-OFL.txt'),
+          to: 'INTER-OFL.txt',
+          toType: 'file',
+        },
         { from: path.resolve(root, 'src/favicon.png'), to: 'favicon.png', toType: 'file' },
       ],
     }),

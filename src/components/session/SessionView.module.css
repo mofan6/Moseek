@@ -47,27 +47,11 @@
   width: calc(var(--message-list-max-width) - 64px);
   max-width: calc(100% - 32px);
   margin: 0 auto;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 30%,
-    var(--dsw-alias-bg-base) 30%,
-    var(--dsw-alias-bg-base) 100%
-  );
-}
-
-.caveat {
-  width: 100%;
-  padding: 6px 0;
-  font-size: 11px;
-  line-height: 16px;
-  text-align: center;
-  color: var(--dsw-alias-label-tertiary);
-  user-select: none;
+  padding-bottom: 18px;
 }
 
 @media not all and (min-width: 768px) {
   .inputContainer {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }

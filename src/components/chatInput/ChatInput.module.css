@@ -22,12 +22,12 @@
 
 .session {
   box-shadow:
-    0 4px 10px rgba(0, 0, 0, 0.02),
-    0 2px 4px rgba(0, 0, 0, 0.04);
+    0 4px 14px rgb(var(--moseek-shadow-ink) / 6%),
+    0 1px 3px rgb(var(--moseek-shadow-ink) / 4%);
 }
 
 .home {
-  box-shadow: 0 18px 52px rgb(35 70 54 / 8%);
+  box-shadow: 0 18px 52px rgb(var(--moseek-shadow-ink) / 9%);
 }
 
 .attachments {
@@ -249,6 +249,11 @@
   gap: 6px;
 }
 
+.reasoningSelect {
+  min-width: 76px;
+  font-weight: 560;
+}
+
 .modelNote {
   margin: -4px 12px 10px;
   color: var(--dsw-alias-label-secondary);
@@ -338,14 +343,27 @@
   background: var(--dsw-alias-button-primary-fill);
   color: var(--dsw-static-neutral-bluish-00);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition:
+    background-color 160ms var(--ds-ease-in-out),
+    transform 160ms var(--ds-ease-in-out);
 
   &:not(.disabled):hover {
     background: var(--dsw-alias-button-primary-hover);
   }
 
+  &:not(.disabled):active {
+    transform: scale(0.94);
+  }
+
   &.disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper,
+  .sendButton {
+    transition: none;
   }
 }

@@ -17,7 +17,6 @@ export type Align = 'start' | 'center' | 'end'
 export type AnchoredPosition = {
   top: number
   left?: number
-  right?: number
   maxHeight?: number
 }
 
@@ -57,7 +56,7 @@ const alignLeft = (anchor: DOMRect, width: number, align: Align, alignOffset: nu
     return clampLeft(anchor.left + anchor.width / 2 - width / 2 + alignOffset, width)
   }
   if (align === 'end') {
-    return Math.max(VIEWPORT_PADDING, anchor.right - width + alignOffset)
+    return clampLeft(anchor.right - width + alignOffset, width)
   }
   return clampLeft(anchor.left + alignOffset, width)
 }
@@ -105,7 +104,6 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
       previous &&
       previous.top === next.top &&
       previous.left === next.left &&
-      previous.right === next.right &&
       previous.maxHeight === next.maxHeight
         ? previous
         : next
@@ -151,7 +149,7 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
         resolved === 'top'
           ? Math.max(VIEWPORT_PADDING, rect.top - offset - height)
           : rect.bottom + offset,
-      right: Math.max(VIEWPORT_PADDING, window.innerWidth - rect.right),
+      left: alignLeft(rect, floating.offsetWidth, align, alignOffset),
       maxHeight: height,
     })
   }, [align, alignOffset, applyPosition, floatingRef, getAnchor, maxHeight, minSpace, offset, side])
@@ -203,7 +201,7 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
 export const useDismiss = (
   open: boolean,
   refs: RefObject<HTMLElement | null>[],
-  onDismiss: () => void,
+  onDismiss: (reason: 'outside' | 'escape') => void,
   { captureEscape = false }: { captureEscape?: boolean } = {}
 ) => {
   const onDismissRef = useRef(onDismiss)
@@ -219,7 +217,7 @@ export const useDismiss = (
       const target = event.target as Node
       const inside = refsRef.current.some((ref) => ref.current?.contains(target))
       if (!inside) {
-        onDismissRef.current()
+        onDismissRef.current('outside')
       }
     }
     const onKeyDown = (event: KeyboardEvent) => {
@@ -229,7 +227,7 @@ export const useDismiss = (
       if (captureEscape) {
         event.stopPropagation()
       }
-      onDismissRef.current()
+      onDismissRef.current('escape')
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown, captureEscape)

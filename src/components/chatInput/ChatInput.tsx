@@ -40,6 +40,7 @@ const modelOptions = (Object.keys(MODEL_NAMES) as ChatModel[]).map((value) => ({
   value,
   label: MODEL_NAMES[value],
 }))
+const reasoningOptions = REASONING_LEVELS.map((value) => ({ value, label: value, lang: 'en' }))
 
 /** 输入框：模型与推理设置、消息、文件、智能搜索、语音和发送操作。 */
 export const ChatInput = memo(function ChatInput({ sessionId }: { sessionId: string | null }) {
@@ -218,11 +219,9 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
           />
           <Select
             value={reasoning}
-            options={REASONING_LEVELS.map((value) => ({
-              value,
-              label: t(`reasoning_${value}`),
-            }))}
+            options={reasoningOptions}
             ariaLabel={t('reasoningLevel')}
+            className={styles.reasoningSelect}
             onChange={setReasoning}
           />
         </div>

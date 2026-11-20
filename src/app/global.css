@@ -1,6 +1,20 @@
 :root {
   --message-list-max-width: 840px;
   --message-list-padding-horizontal: 44px;
+  --moseek-popup-animation: moseek-popup-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes moseek-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --moseek-popup-animation: none;
+  }
 }
 
 @media (max-width: 1023px) {

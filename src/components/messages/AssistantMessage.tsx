@@ -49,7 +49,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   const t = useTranslate()
   const counts = streaming ? undefined : getReplyTokenCounts(message)
   const detail = message.model
-    ? [MODEL_NAMES[message.model], message.reasoning && t(`reasoning_${message.reasoning}`)]
+    ? [MODEL_NAMES[message.model], message.reasoning]
         .filter(Boolean)
         .join(' · ')
     : undefined

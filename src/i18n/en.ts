@@ -2,7 +2,6 @@ import type { zh } from './zh.js'
 
 export const en = {
   welcomeMessageChat250808: 'What’s on your mind?',
-  contentCaveat: 'AI-generated, for reference only',
   expandSiderbarButton: 'Open sidebar',
   collapseSiderbarButton: 'Close sidebar',
   newChat: 'New chat',
@@ -152,10 +151,6 @@ export const en = {
   conversationMessages: 'Conversation messages',
   chatModel: 'Model',
   reasoningLevel: 'Reasoning effort',
-  reasoning_off: 'Reasoning off',
-  reasoning_low: 'Low reasoning',
-  reasoning_high: 'High reasoning',
-  reasoning_max: 'Max reasoning',
   flashFeatures: 'Switch to Flash for web search and image input.',
   imagesRequireFlash: 'This message contains images. Switch to Flash to send it.',
   replyTokenUsage: 'Reply usage',

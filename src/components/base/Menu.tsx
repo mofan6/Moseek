@@ -39,7 +39,8 @@ export const Menu = ({
             <div
               ref={floatingRef}
               className={styles.menu}
-              style={position ?? undefined}
+              data-positioned={position ? '' : undefined}
+              style={position ?? { visibility: 'hidden' }}
               role="menu"
             >
               {options.map((option) => (
