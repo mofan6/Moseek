@@ -169,6 +169,7 @@ export const zh = {
   usageRequestTimes: '{count} 次',
   deactivatedSearchTooltip: '按需搜索网页',
   search: '智能搜索',
+  shortSearch: '联网',
   uploadFile: '上传文件',
   chatInputStopButtonTooltip: '停止生成',
   uploadMaxMBSize: '单个文件大小超过限制（{size}MB），请调整后重试',

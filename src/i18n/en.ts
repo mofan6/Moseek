@@ -178,6 +178,7 @@ export const en = {
   usageRequestTimes: '{count}×',
   deactivatedSearchTooltip: 'Search the web when necessary',
   search: 'Search',
+  shortSearch: 'Search',
   uploadFile: 'Upload files',
   chatInputStopButtonTooltip: 'Stop',
   uploadMaxMBSize: 'File exceeds the size limit ({size} MB). Please adjust and try again.',

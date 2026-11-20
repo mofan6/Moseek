@@ -72,7 +72,7 @@
     justify-content: flex-end;
     max-width: none;
     margin: 0;
-    padding: 0 16px max(8px, env(safe-area-inset-bottom));
+    padding: 0 16px var(--app-composer-bottom, max(8px, env(safe-area-inset-bottom)));
   }
 
   .greeting {
@@ -83,6 +83,10 @@
 
   .footer {
     padding-top: 3px;
+  }
+
+  :global([data-keyboard-open]) .footer {
+    display: none;
   }
 }
 

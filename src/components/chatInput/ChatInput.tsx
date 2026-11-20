@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { memo, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useRef } from 'react'
 import {
   IconGlobeLanguageOutline14,
   IconPaperclipOutline16,
@@ -39,6 +39,7 @@ import styles from './ChatInput.module.css'
 const modelOptions = (Object.keys(MODEL_NAMES) as ChatModel[]).map((value) => ({
   value,
   label: MODEL_NAMES[value],
+  shortLabel: MODEL_NAMES[value].replace(/^DeepSeek /, ''),
 }))
 const reasoningOptions = REASONING_LEVELS.map((value) => ({ value, label: value, lang: 'en' }))
 
@@ -65,24 +66,6 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const search = useSettings((state) => state.search)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const togglesRef = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const toggles = togglesRef.current
-    if (!toggles) {
-      return
-    }
-
-    const updateLabels = () => {
-      toggles.classList.remove(styles.collapsedToggles)
-      toggles.classList.toggle(styles.collapsedToggles, toggles.scrollWidth > toggles.clientWidth)
-    }
-
-    updateLabels()
-    const observer = new ResizeObserver(updateLabels)
-    observer.observe(toggles)
-    return () => observer.disconnect()
-  }, [t])
 
   const acceptFiles = (files: File[]) => {
     if (files.length === 0 || useChatStore.getState().importingHistory || !ensureApiKey()) {
@@ -215,6 +198,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
             value={model}
             options={modelOptions}
             ariaLabel={t('chatModel')}
+            className={styles.modelSelect}
             onChange={setModel}
           />
           <Select
@@ -224,8 +208,6 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
             className={styles.reasoningSelect}
             onChange={setReasoning}
           />
-        </div>
-        <div ref={togglesRef} className={styles.toggles}>
           <Tooltip content={t(supportsSearch ? 'deactivatedSearchTooltip' : 'flashFeatures')}>
             <button
               type="button"
@@ -236,7 +218,10 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               onClick={() => setSearch(!search)}
             >
               <IconGlobeLanguageOutline14 />
-              <span className={styles.toggleLabel}>{t('search')}</span>
+              <span className={styles.toggleLabel}>
+                <span className={styles.fullSearchLabel}>{t('search')}</span>
+                <span className={styles.shortSearchLabel}>{t('shortSearch')}</span>
+              </span>
             </button>
           </Tooltip>
         </div>

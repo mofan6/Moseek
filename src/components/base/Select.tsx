@@ -5,7 +5,12 @@ import { useAnchoredPosition, useDismiss } from './anchored.js'
 import { IconCheckOutline16, IconChevronDownOutline14 } from './icons.js'
 import styles from './Select.module.css'
 
-export type SelectOption<T extends string> = { value: T; label: string; lang?: string }
+export type SelectOption<T extends string> = {
+  value: T
+  label: string
+  shortLabel?: string
+  lang?: string
+}
 
 /**
  * 胶囊形选择器：触发器高 36px、圆角 18px、浅灰底，下拉菜单选中项右侧打勾；
@@ -128,6 +133,7 @@ export const Select = <T extends string>({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
+        title={current?.shortLabel ? current.label : undefined}
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={(event) => {
@@ -138,7 +144,16 @@ export const Select = <T extends string>({
         }}
       >
         {current ? (
-          <span lang={current.lang}>{current.label}</span>
+          <span lang={current.lang}>
+            {current.shortLabel ? (
+              <>
+                <span className={styles.fullLabel}>{current.label}</span>
+                <span className={styles.shortLabel}>{current.shortLabel}</span>
+              </>
+            ) : (
+              current.label
+            )}
+          </span>
         ) : (
           <span className={styles.placeholder}>{placeholder}</span>
         )}

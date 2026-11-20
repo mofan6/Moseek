@@ -127,8 +127,12 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
       return
     }
     const rect = anchor.getBoundingClientRect()
-    const spaceAbove = rect.top - offset - VIEWPORT_PADDING
-    const spaceBelow = window.innerHeight - rect.bottom - offset - VIEWPORT_PADDING
+    const viewport = window.visualViewport
+    const visible = viewport?.scale === 1 ? viewport : null
+    const viewportTop = visible?.offsetTop ?? 0
+    const viewportBottom = viewportTop + (visible?.height ?? window.innerHeight)
+    const spaceAbove = rect.top - viewportTop - offset - VIEWPORT_PADDING
+    const spaceBelow = viewportBottom - rect.bottom - offset - VIEWPORT_PADDING
 
     if (maxHeight === undefined) {
       const { width, height } = floating.getBoundingClientRect()
@@ -147,7 +151,7 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
     applyPosition({
       top:
         resolved === 'top'
-          ? Math.max(VIEWPORT_PADDING, rect.top - offset - height)
+          ? Math.max(viewportTop + VIEWPORT_PADDING, rect.top - offset - height)
           : rect.bottom + offset,
       left: alignLeft(rect, floating.offsetWidth, align, alignOffset),
       maxHeight: height,
@@ -179,12 +183,17 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
     if (anchor) {
       observer.observe(anchor)
     }
+    const viewport = window.visualViewport
     window.addEventListener('scroll', update, { capture: true, passive: true })
     window.addEventListener('resize', update, { passive: true })
+    viewport?.addEventListener('resize', update, { passive: true })
+    viewport?.addEventListener('scroll', update, { passive: true })
     return () => {
       observer.disconnect()
       window.removeEventListener('scroll', update, { capture: true })
       window.removeEventListener('resize', update)
+      viewport?.removeEventListener('resize', update)
+      viewport?.removeEventListener('scroll', update)
     }
   }, [floatingRef, getAnchor, open, update])
 

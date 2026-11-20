@@ -54,10 +54,18 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+.fullLabel {
+  display: var(--select-full-label-display, inline);
+}
+
+.shortLabel {
+  display: var(--select-short-label-display, none);
+}
+
 .arrow {
   position: absolute;
   top: 50%;
-  right: 14px;
+  right: var(--select-arrow-inset, 14px);
   display: flex;
   color: var(--dsw-alias-label-secondary);
   transform: translateY(-50%);

@@ -53,26 +53,40 @@ export const useMobileViewport = (enabled: boolean) => {
     }
     const viewport = window.visualViewport
     const inputSelector = 'textarea, input:not([type="file"])'
+    const keyboardThreshold = 120
+    const touchDevice = navigator.maxTouchPoints > 0
+    let viewportWidth = window.innerWidth
+    let restingHeight = viewport?.height ?? window.innerHeight
+    let keyboardOpen = false
     let animationFrame = 0
     const reset = () => {
       frame.style.removeProperty('--app-viewport-height')
       frame.style.removeProperty('--app-viewport-top')
+      frame.removeAttribute('data-keyboard-open')
     }
     const update = () => {
       // 双指缩放由浏览器处理，保持当前布局尺寸。
       if (viewport && viewport.scale !== 1) {
         return
       }
-      // 失焦后直接恢复 CSS 的全高布局，不等 Safari 收键盘后的 resize。
-      if (!document.activeElement?.matches(inputSelector)) {
-        reset()
-        return
+      const height = viewport?.height ?? window.innerHeight
+      if (viewportWidth !== window.innerWidth) {
+        viewportWidth = window.innerWidth
+        restingHeight = height
+        keyboardOpen = false
       }
-      frame.style.setProperty(
-        '--app-viewport-height',
-        `${viewport?.height ?? window.innerHeight}px`
-      )
+      const editing = document.activeElement?.matches(inputSelector) ?? false
+      // 视觉视口可能单独缩小，也可能随布局视口一起缩小。收键盘动画期间继续跟随。
+      const heightBeforeKeyboard = touchDevice
+        ? Math.max(restingHeight, window.innerHeight)
+        : window.innerHeight
+      keyboardOpen = (editing || keyboardOpen) && heightBeforeKeyboard - height >= keyboardThreshold
+      if (!keyboardOpen && (!editing || height > restingHeight)) {
+        restingHeight = height
+      }
+      frame.style.setProperty('--app-viewport-height', `${height}px`)
       frame.style.setProperty('--app-viewport-top', `${viewport?.offsetTop ?? 0}px`)
+      frame.toggleAttribute('data-keyboard-open', keyboardOpen)
     }
     const scheduleFrame = () => {
       cancelAnimationFrame(animationFrame)
@@ -94,7 +108,7 @@ export const useMobileViewport = (enabled: boolean) => {
     viewport?.addEventListener('scroll', schedule)
     window.addEventListener('resize', schedule)
     document.addEventListener('focusin', onFocusIn)
-    // 等点击和焦点切换完成，避免按钮移动、或切换输入框时短暂恢复全高。
+    // 等点击和焦点切换完成，再读取当前视口。
     document.addEventListener('focusout', scheduleFrame)
     return () => {
       cancelAnimationFrame(animationFrame)

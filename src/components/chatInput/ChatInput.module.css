@@ -1,6 +1,7 @@
 .wrapper {
   --line-height: 24px;
   --input-padding-top: 12px;
+  container: composer / inline-size;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -237,7 +238,6 @@
 .functionRow {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
   padding: 12px;
@@ -245,8 +245,14 @@
 
 .modelOptions {
   display: flex;
-  flex-wrap: wrap;
+  min-width: 0;
+  align-items: center;
   gap: 6px;
+}
+
+.modelOptions .modelSelect {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .reasoningSelect {
@@ -261,21 +267,7 @@
   line-height: 18px;
 }
 
-@media (max-width: 540px) {
-  .modelOptions {
-    flex-basis: 100%;
-  }
-}
-
-.toggles {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 10px;
-  min-width: 34px;
-}
-
-.collapsedToggles .toggleLabel {
+.shortSearchLabel {
   display: none;
 }
 
@@ -358,6 +350,94 @@
   &.disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+}
+
+@container composer (max-width: 540px) {
+  .functionRow {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .modelOptions {
+    gap: 4px;
+  }
+
+  .modelOptions .modelSelect,
+  .modelOptions .reasoningSelect {
+    --select-arrow-inset: 5px;
+    height: 32px;
+    padding: 0 22px 0 8px;
+    font-size: 12px;
+  }
+
+  .modelSelect {
+    --select-full-label-display: none;
+    --select-short-label-display: inline;
+  }
+
+  .modelOptions .reasoningSelect {
+    min-width: 0;
+  }
+
+  .toggle {
+    height: 32px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .fullSearchLabel {
+    display: none;
+  }
+
+  .shortSearchLabel {
+    display: inline;
+  }
+
+  .right {
+    gap: 2px;
+  }
+
+  .right .sendButton {
+    margin-left: 2px;
+  }
+}
+
+@container composer (max-width: 350px) {
+  .functionRow {
+    gap: 4px;
+    padding-inline: 6px;
+  }
+
+  .modelOptions .modelSelect,
+  .modelOptions .reasoningSelect {
+    --select-arrow-inset: 3px;
+    padding: 0 18px 0 7px;
+  }
+
+  .toggle {
+    width: 32px;
+    padding: 0;
+  }
+
+  .toggleLabel {
+    display: none;
+  }
+
+  .right > button {
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@container composer (max-width: 265px) {
+  .functionRow {
+    flex-wrap: wrap;
+  }
+
+  .modelOptions {
+    flex-basis: 100%;
   }
 }
 

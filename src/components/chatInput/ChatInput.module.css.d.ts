@@ -13,11 +13,12 @@ declare const styles: {
   readonly "mirror": string;
   readonly "functionRow": string;
   readonly "modelOptions": string;
+  readonly "modelSelect": string;
   readonly "reasoningSelect": string;
   readonly "modelNote": string;
-  readonly "toggles": string;
-  readonly "collapsedToggles": string;
   readonly "toggleLabel": string;
+  readonly "fullSearchLabel": string;
+  readonly "shortSearchLabel": string;
   readonly "toggle": string;
   readonly "selected": string;
   readonly "right": string;
