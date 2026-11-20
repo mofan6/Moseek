@@ -21,6 +21,12 @@ export const TokenUsage = ({
     [t('uncachedTokenCount'), counts.cacheMiss],
     [t('outputTokenCount'), counts.output],
   ] as const
+  const breakdown = [
+    [t('thinkingTokenCount'), counts.thinking, false],
+    [t('safetyTokenCount'), counts.safety, false],
+    [t('searchRequestCount'), counts.searches, true],
+    [t('fetchRequestCount'), counts.fetches, true],
+  ] as const
   return (
     <div className={styles.usage} role="group" aria-label={label}>
       <span className={styles.label}>{label}</span>
@@ -33,6 +39,25 @@ export const TokenUsage = ({
           </div>
         ))}
       </dl>
+      {breakdown.some(([, count]) => count !== undefined) ? (
+        <details className={styles.breakdown}>
+          <summary>{t('replyUsageBreakdown')}</summary>
+          <dl className={styles.metrics}>
+            {breakdown.map(([name, count, times]) =>
+              count === undefined ? null : (
+                <div className={styles.metric} key={name}>
+                  <dt>{name}</dt>
+                  <dd>
+                    {times
+                      ? t('usageRequestTimes', { count: format.format(count) })
+                      : format.format(count)}
+                  </dd>
+                </div>
+              )
+            )}
+          </dl>
+        </details>
+      ) : null}
     </div>
   )
 }

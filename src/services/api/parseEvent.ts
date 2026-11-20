@@ -208,7 +208,7 @@ export const readMessageEvent = (value: unknown): MessageStreamEvent | null => {
     case 'message_delta':
       if (
         !isRecord(value.delta) ||
-        !['end_turn', 'max_tokens', 'tool_use', 'refusal'].includes(
+        !['end_turn', 'max_tokens', 'stop_sequence', 'tool_use', 'refusal'].includes(
           value.delta.stop_reason as string
         )
       ) {
@@ -218,6 +218,8 @@ export const readMessageEvent = (value: unknown): MessageStreamEvent | null => {
         ...value,
         delta: {
           ...value.delta,
+          stop_sequence:
+            typeof value.delta.stop_sequence === 'string' ? value.delta.stop_sequence : null,
           title: isOptionalString(value.delta.title) ? value.delta.title : undefined,
         },
         usage: isUsage(value.usage) ? value.usage : undefined,

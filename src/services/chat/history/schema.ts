@@ -34,6 +34,7 @@ const number: Read<number> = (value) =>
 /** 非负安全整数（u32 等） */
 const count: Read<number> = (value) =>
   Number.isSafeInteger(value) && (value as number) >= 0 ? (value as number) : invalid()
+const optionalCount = (value: unknown) => (value === undefined ? undefined : count(value))
 
 const time: Read<string> = (value) => {
   if (typeof value !== 'string') {
@@ -203,13 +204,21 @@ const moseekMetadata: Read<NonNullable<ChatMessage['moseek']>> = (value) => {
   const counts = item.token_counts === undefined ? undefined : record(item.token_counts)
   const latest = item.latest_usage === undefined ? undefined : record(item.latest_usage)
   return {
-    model: item.model === undefined ? undefined : oneOf('deepseek-flash', 'deepseek-v4-pro')(item.model),
+    model:
+      item.model === undefined ? undefined : oneOf('deepseek-flash', 'deepseek-v4-pro')(item.model),
     reasoning:
       item.reasoning === undefined ? undefined : oneOf(...REASONING_LEVELS)(item.reasoning),
+    context_mode:
+      item.context_mode === undefined ? undefined : oneOf('recent', 'full')(item.context_mode),
+    omitted_history_rounds: optionalCount(item.omitted_history_rounds),
     token_counts: counts && {
       cacheHit: count(counts.cacheHit),
       cacheMiss: count(counts.cacheMiss),
       output: count(counts.output),
+      thinking: optionalCount(counts.thinking),
+      safety: optionalCount(counts.safety),
+      searches: optionalCount(counts.searches),
+      fetches: optionalCount(counts.fetches),
     },
     latest_usage: latest && {
       input_tokens: count(latest.input_tokens),

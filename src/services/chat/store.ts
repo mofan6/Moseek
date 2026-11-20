@@ -3,7 +3,6 @@ import { showToast } from '../../components/base/toastState.js'
 import { createId } from '../../utils/id.js'
 import { ApiError, streamMessage } from '../api/client.js'
 import { DEFAULT_MODEL } from '../api/models.js'
-import type { CreateMessageRequest } from '../api/types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
 import { useSettings } from '../settings.js'
@@ -25,6 +24,12 @@ import {
   toRequestMessages,
 } from './reply.js'
 import {
+  getServerTools,
+  MAX_OUTPUT_TOKENS,
+  selectRequestHistory,
+  SYSTEM_PROMPT,
+} from './requestPolicy.js'
+import {
   toSessionSummary,
   type AssistantMessage,
   type FileAttachment,
@@ -35,8 +40,6 @@ import {
 } from './types.js'
 import { addTokenCounts, getReplyTokenCounts, toTokenCounts } from './usage.js'
 
-/** 所有生成请求统一携带的助手身份说明 */
-const SYSTEM_PROMPT = '你是 Moseek 的聊天助手，由 DeepSeek 模型提供支持。'
 /** 保留最近打开的详情；当前会话、生成中及尚未成功保存的会话不淘汰。 */
 const SESSION_CACHE_LIMIT = 5
 /** 安全审核固定开启，所有请求都走扩展模式 */
@@ -45,17 +48,6 @@ const SAFETY_CHECK = { level: 'high' } as const
 const FILE_RETRY_LIMIT = 2
 /** 退避基数，第 n 次重试等待 2^n 倍；连续失败达到上限就放弃，把原始报错展示出来 */
 const FILE_RETRY_BASE_DELAY = 1000
-
-/** 阅读链接始终开启，智能搜索开关控制是否另行声明搜索工具（含边想边搜）。 */
-const serverTools = (search: boolean): CreateMessageRequest['tools'] => {
-  const tools: CreateMessageRequest['tools'] = [
-    { type: 'deepseek_read_url', name: 'deepseek_read_url' },
-  ]
-  if (search) {
-    tools.push({ type: 'deepseek_web_search', name: 'deepseek_web_search' })
-  }
-  return tools
-}
 
 /** 允许自动补标题的请求；手动重命名后取消本轮标题写入，包含主动清空标题的情况。 */
 const titleRequests = new Set<AbortController>()
@@ -256,7 +248,7 @@ export const bindChatPersistence = () => {
 
 /** 每条回复保留发送时的模型和推理设置。 */
 const createReply = (): AssistantMessage => {
-  const { model, reasoning, search } = useSettings.getState()
+  const { model, reasoning, search, contextMode } = useSettings.getState()
   return {
     id: createId(),
     role: 'assistant',
@@ -265,6 +257,7 @@ const createReply = (): AssistantMessage => {
     thinking: reasoning !== 'off',
     reasoning,
     search: model === 'deepseek-flash' && search,
+    contextMode,
     prefix: true,
     status: 'pending',
     blocks: [],
@@ -984,16 +977,22 @@ const waitForRetry = (attempt: number, signal: AbortSignal) =>
  * 补传失败时回复记为 upload 错误，可重试。
  * 服务端判定 file_id 失效时重新补传后重发，退避重试且次数有上限，超过则按原始报错收尾。
  */
-const streamReply = async (sessionId: string, initial: AssistantMessage, request: Request) => {
+const streamReply = async (sessionId: string, initial: AssistantMessage, original: Request) => {
   const model = initial.model ?? DEFAULT_MODEL
   const reasoning = initial.reasoning ?? (initial.thinking ? 'high' : 'off')
   const supportsWebTools = model === 'deepseek-flash'
+  const contextMode = initial.contextMode ?? useSettings.getState().contextMode
+  const { history, omittedHistoryRounds } = selectRequestHistory(original.history, contextMode)
+  const request = { ...original, history }
+  const tools = supportsWebTools
+    ? getServerTools(request.question, initial.search ?? false)
+    : []
   const controller = new AbortController()
   if (!getSession(sessionId)?.title) {
     titleRequests.add(controller)
   }
   set((state) => ({ streaming: { ...state.streaming, [sessionId]: controller } }))
-  let reply = initial
+  let reply: AssistantMessage = { ...initial, contextMode, omittedHistoryRounds }
   let frame = 0
   const flush = () => {
     cancelAnimationFrame(frame)
@@ -1024,7 +1023,7 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           prepared.prefix,
           reasoning !== 'off',
           latestReminder,
-          supportsWebTools
+          supportsWebTools && contextMode === 'full'
         )
         const events = streamMessage(
           useSettings.getState().apiKey ?? '',
@@ -1032,10 +1031,11 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             model,
             system: SYSTEM_PROMPT,
             messages,
+            max_tokens: MAX_OUTPUT_TOKENS[reasoning],
             thinking: { type: reasoning === 'off' ? 'disabled' : 'enabled' },
             ...(reasoning === 'off' ? {} : { output_config: { effort: reasoning } }),
             safety_check: SAFETY_CHECK,
-            tools: supportsWebTools ? serverTools(initial.search ?? false) : [],
+            ...(tools.length ? { tools } : {}),
             ...(titleRequests.has(controller) ? { title: { enabled: true } } : {}),
           },
           controller.signal
@@ -1070,6 +1070,9 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             frame ||= requestAnimationFrame(flush)
           }
         }
+        if (!reply.stopReason) {
+          throw new ApiError('interrupted', '')
+        }
         reply = settleReply(reply, 'done', Date.now())
         break
       } catch (error) {
@@ -1099,7 +1102,13 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           }
           continue
         }
-        if (error instanceof ApiError && error.kind === 'interrupted' && reply.stopReason) {
+        if (
+          error instanceof ApiError &&
+          error.status === 400 &&
+          /\bContent Exists Risk\b/i.test(error.message)
+        ) {
+          reply = settleReply({ ...reply, stopReason: 'refusal' }, 'done', Date.now())
+        } else if (error instanceof ApiError && error.kind === 'interrupted' && reply.stopReason) {
           // 已收到 message_delta 的结束原因，只是缺了结尾的 message_stop
           reply = settleReply(reply, 'done', Date.now())
         } else if (error instanceof ApiError) {

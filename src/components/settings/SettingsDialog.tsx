@@ -21,6 +21,7 @@ import { useChatStore } from '../../services/chat/store.js'
 import { regionCodes, getRegionName, provinces } from '../../services/location.js'
 import {
   isChineseBrowser,
+  setContextMode,
   setLocale,
   setLocation,
   setThemePreference,
@@ -100,6 +101,7 @@ const SettingsContent = () => {
             <>
               <ThemeSetting />
               <LocaleSetting />
+              <ContextModeSetting />
               <TtsVoiceSetting />
               <LocationSetting />
               <SettingCell
@@ -305,6 +307,31 @@ const LocaleSetting = () => {
             { value: 'en-US', label: t('settingsLocaleEnUS'), lang: 'en' },
           ]}
           onChange={setLocale}
+        />
+      }
+    />
+  )
+}
+
+const ContextModeSetting = () => {
+  const t = useTranslate()
+  const mode = useSettings((state) => state.contextMode)
+  return (
+    <SettingCell
+      label={t('settingsContextMode')}
+      description={t(
+        mode === 'recent' ? 'settingsContextRecentDescription' : 'settingsContextFullDescription'
+      )}
+      status={null}
+      action={
+        <Select
+          ariaLabel={t('settingsContextMode')}
+          value={mode}
+          options={[
+            { value: 'recent', label: t('settingsContextRecent') },
+            { value: 'full', label: t('settingsContextFull') },
+          ]}
+          onChange={setContextMode}
         />
       }
     />

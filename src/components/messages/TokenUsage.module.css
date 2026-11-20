@@ -32,3 +32,16 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+.breakdown {
+  flex-basis: 100%;
+}
+
+.breakdown summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.breakdown[open] summary {
+  margin-bottom: 4px;
+}

@@ -145,3 +145,20 @@
     --search-row-site-logo-color: var(--dsw-alias-interactive-bg-hover);
   }
 }
+.requestNote,
+.contextNote {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.contextNote {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

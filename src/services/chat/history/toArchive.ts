@@ -257,6 +257,8 @@ export const toSessionFile = (original: Session, exportImage: ExportImage): Sess
               reasoning: message.reasoning,
               token_counts: counts,
               latest_usage: counts ? message.usage : undefined,
+              context_mode: message.contextMode,
+              omitted_history_rounds: message.omittedHistoryRounds || undefined,
             },
           }
         : {}),

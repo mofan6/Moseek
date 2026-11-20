@@ -9,6 +9,7 @@
 import type { ReasoningLevel } from '../../api/models.js'
 import type { ChatModel, MessageUsage } from '../../api/types.js'
 import type { TokenCounts } from '../usage.js'
+import type { ContextMode } from '../../settings.js'
 
 /** 2026-11-11T02:33:23.270Z */
 export type Iso8601Utc = string
@@ -72,6 +73,8 @@ export type ChatMessage = {
     reasoning?: ReasoningLevel
     token_counts?: TokenCounts
     latest_usage?: MessageUsage
+    context_mode?: ContextMode
+    omitted_history_rounds?: number
   }
 }
 

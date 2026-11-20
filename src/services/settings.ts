@@ -8,6 +8,7 @@ export type Locale = 'zh-CN' | 'en-US'
 
 /** 主题偏好；默认跟随系统 */
 export type ThemePreference = 'light' | 'dark' | 'system'
+export type ContextMode = 'recent' | 'full'
 
 /** 本机设置保存在 localStorage。 */
 type Settings = {
@@ -19,6 +20,7 @@ type Settings = {
   model: ChatModel
   reasoning: ReasoningLevel
   search: boolean
+  contextMode: ContextMode
   siderCollapsed: boolean
 }
 
@@ -32,6 +34,7 @@ const KEYS = {
   model: 'moseek:model',
   reasoning: 'moseek:reasoning',
   search: 'moseek:search',
+  contextMode: 'moseek:context-mode',
   siderCollapsed: 'moseek:sider-collapsed',
 } as const
 
@@ -110,6 +113,7 @@ export const useSettings = create<Settings>(() => ({
   model: read(KEYS.model) === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : DEFAULT_MODEL,
   reasoning: initialReasoning(),
   search: read(KEYS.search) === 'true',
+  contextMode: read(KEYS.contextMode) === 'full' ? 'full' : 'recent',
   siderCollapsed: read(KEYS.siderCollapsed) === 'true',
 }))
 
@@ -155,6 +159,11 @@ export const setReasoning = (reasoning: ReasoningLevel) => {
 export const setSearch = (search: boolean) => {
   write(KEYS.search, String(search))
   useSettings.setState({ search })
+}
+
+export const setContextMode = (contextMode: ContextMode) => {
+  write(KEYS.contextMode, contextMode)
+  useSettings.setState({ contextMode })
 }
 
 export const setSiderCollapsed = (siderCollapsed: boolean) => {

@@ -149,8 +149,18 @@ export const AssistantMessage = memo(function AssistantMessage({
           </span>
         </div>
       ) : null}
-      {counts ? (
-        <TokenUsage counts={counts} label={t('replyTokenUsage')} detail={detail} />
+      {counts ? <TokenUsage counts={counts} label={t('replyTokenUsage')} detail={detail} /> : null}
+      {!streaming && message.stopReason === 'max_tokens' ? (
+        <span className={styles.requestNote}>{t('replyOutputLimit')}</span>
+      ) : null}
+      {!streaming && !!message.omittedHistoryRounds ? (
+        <button
+          type="button"
+          className={styles.contextNote}
+          onClick={() => openSettings('general')}
+        >
+          {t('replyOmittedHistory', { count: message.omittedHistoryRounds })}
+        </button>
       ) : null}
       {streaming ? null : (
         <div className={styles.bottom}>

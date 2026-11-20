@@ -178,16 +178,17 @@ export type CreateMessageRequest = {
   model: ChatModel
   system: string
   messages: MessageParam[]
+  max_tokens: number
   thinking: { type: 'enabled' | 'disabled' }
   output_config?: { effort: Exclude<ReasoningLevel, 'off'> }
-  tools: (DeepseekWebSearchTool | DeepseekReadUrlTool)[]
+  tools?: (DeepseekWebSearchTool | DeepseekReadUrlTool)[]
   safety_check: { level: 'high' }
   title?: { enabled: boolean }
 }
 
 // ---------- 响应：流式事件 ----------
 
-export type StopReason = 'end_turn' | 'max_tokens' | 'tool_use' | 'refusal'
+export type StopReason = 'end_turn' | 'max_tokens' | 'stop_sequence' | 'tool_use' | 'refusal'
 
 export type StopDetails = { type: 'refusal'; category: null; explanation: null }
 
@@ -198,8 +199,12 @@ export type MessageUsage = {
   cache_read_input_tokens: number
   /** message_start 中为 0，message_delta 中为全轮累计值 */
   output_tokens: number
-  /** 仅当 message_delta 中有对外输出的搜索结果块时出现 */
-  server_tool_use?: { web_search_requests: number; tool_search: number }
+  output_tokens_details?: { thinking_tokens?: number; safety_tokens?: number }
+  server_tool_use?: {
+    web_search_requests?: number
+    tool_search?: number
+    tool_fetch?: number
+  }
 }
 
 /** content_block_start 携带的初始内容块；工具块已是完整内容 */
@@ -227,7 +232,7 @@ export type MessageStreamEvent =
       /** title 仅在开启标题且生成成功时出现；stop_details 仅在 refusal 时出现 */
       delta: {
         stop_reason: StopReason
-        stop_sequence: null
+        stop_sequence: string | null
         stop_details?: StopDetails
         title?: string
       }
