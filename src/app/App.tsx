@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useTranslate } from '../i18n/index.js'
 import { useSettings } from '../services/settings.js'
 import { useIsMobile, useMobileViewport, usePreventPageScroll } from './viewport.js'
-import { Atmosphere } from './Atmosphere.js'
 import {
   bindChatPersistence,
   initChat,
@@ -75,7 +74,7 @@ export const App = () => {
   return (
     <>
       <div ref={frameRef} className={styles.frame} data-chat-active={activeId !== null || undefined}>
-        <Atmosphere />
+        <div className={styles.atmosphere} aria-hidden="true" />
         {isMobile ? <MobileSider /> : siderCollapsed ? null : <Sider />}
         <main className={styles.main} data-sidebar-collapsed={siderCollapsed || undefined}>
           {saveError ? (

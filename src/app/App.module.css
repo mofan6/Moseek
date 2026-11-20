@@ -21,71 +21,34 @@
   );
 }
 
-.atmosphere canvas {
+.atmosphere::before {
   position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-}
-
-.atmosphere[data-renderer='webgl'] canvas {
-  opacity: 0.9;
-}
-
-.frame[data-chat-active] .atmosphere[data-renderer='webgl'] canvas {
-  opacity: 0.37;
-}
-
-.atmosphere[data-renderer='webgl']::before,
-.atmosphere[data-renderer='webgl']::after {
-  display: none;
-}
-
-.atmosphere::before,
-.atmosphere::after {
-  position: absolute;
-  inset: -16%;
+  inset: -20% -24%;
+  background: radial-gradient(
+    ellipse 59% 67% at 76% 20%,
+    var(--moseek-atmosphere-light),
+    transparent 86%
+  );
+  animation: atmosphere-light 24s ease-in-out infinite alternate;
   content: '';
 }
 
-.atmosphere::before {
-  background:
-    radial-gradient(ellipse 43% 47% at 79% 25%, var(--moseek-atmosphere-glow), transparent 88%),
-    radial-gradient(ellipse 44% 39% at 28% 73%, var(--moseek-atmosphere-veil), transparent 92%),
-    radial-gradient(ellipse 43% 43% at 15% 21%, var(--moseek-atmosphere-shadow), transparent 91%);
-  animation: atmosphere-drift 25s ease-in-out infinite alternate;
+.frame[data-chat-active] .atmosphere::before {
+  opacity: 0.36;
 }
 
-.atmosphere::after {
-  background:
-    radial-gradient(ellipse 53% 15% at 52% 42%, var(--moseek-atmosphere-fold), transparent 90%),
-    radial-gradient(ellipse 52% 22% at 52% 57%, var(--moseek-atmosphere-shadow), transparent 82%);
-  transform: rotate(-19deg);
-  animation: atmosphere-fold 31s ease-in-out infinite alternate;
+:global(html[data-moseek-theme-reveal]) .atmosphere::before {
+  animation-play-state: paused;
 }
 
-.frame[data-chat-active] .atmosphere::before,
-.frame[data-chat-active] .atmosphere::after {
-  opacity: 0.42;
-}
-
-@keyframes atmosphere-drift {
+@keyframes atmosphere-light {
   to {
-    transform: translate(-4%, 4%) scale(1.05);
-  }
-}
-
-@keyframes atmosphere-fold {
-  to {
-    transform: translate(4%, -4%) rotate(-11deg);
+    transform: translate(-15%, 12%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .atmosphere::before,
-  .atmosphere::after {
+  .atmosphere::before {
     animation: none;
   }
 }

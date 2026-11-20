@@ -1,6 +1,5 @@
 declare const styles: {
   readonly "wrapper": string;
-  readonly "glass": string;
   readonly "session": string;
   readonly "home": string;
   readonly "attachments": string;
