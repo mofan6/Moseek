@@ -9,7 +9,9 @@
   min-width: 124px;
   padding: 4px;
   border-radius: 12px;
-  background-color: var(--dsw-specific-menu);
+  background-color: var(--moseek-glass-float);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--dsw-alias-border-l2);
   box-shadow: var(--dsw-shadow-lv3);
 

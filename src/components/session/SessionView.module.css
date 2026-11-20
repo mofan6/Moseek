@@ -12,7 +12,9 @@
   height: 60px;
   padding: 12px 18px 0;
   box-sizing: border-box;
-  background: var(--dsw-alias-bg-base);
+  background: var(--moseek-glass-rail);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }
 
 .title {

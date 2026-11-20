@@ -7,7 +7,9 @@
   height: 100%;
   padding: 12px 14px 0;
   border-right: 1px solid var(--dsw-alias-border-l1);
-  background-color: var(--dsw-specific-sidebar-fill);
+  background-color: var(--moseek-glass-rail);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .top {
@@ -190,8 +192,12 @@
   box-sizing: border-box;
   border-radius: 100px;
   border: 1px solid var(--dsw-alias-border-l2);
-  background: var(--dsw-alias-bg-layer-3);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  background: var(--moseek-glass-float);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 0 var(--moseek-glass-edge),
+    0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .drawer {

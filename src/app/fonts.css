@@ -61,24 +61,24 @@
   src: url('../assets/fonts/InterVariable.woff2') format('woff2');
 }
 
-:root[data-moseek-font='harmonyRegular'] {
-  --moseek-font-ui: 'Moseek Harmony Regular', 'HarmonyOS Sans SC';
+:root[data-moseek-font='harmony'] {
+  --moseek-font-ui: 'HarmonyOS Sans SC';
 }
 
 :root[data-moseek-font='kai'] {
-  --moseek-font-ui: 'Moseek Kai', 'HarmonyOS Sans SC';
+  --moseek-font-ui: 'Moseek Kai', 'Moseek Harmony Regular';
 }
 
 :root[data-moseek-font='sourceHanSans'] {
-  --moseek-font-ui: 'Moseek Source Han Sans', 'HarmonyOS Sans SC';
+  --moseek-font-ui: 'Moseek Source Han Sans', 'Moseek Harmony Regular';
 }
 
 :root[data-moseek-font='sourceHanSerif'] {
-  --moseek-font-ui: 'Moseek Source Han Serif', 'HarmonyOS Sans SC';
+  --moseek-font-ui: 'Moseek Source Han Serif', 'Moseek Harmony Regular';
 }
 
 :root[data-moseek-font='inter'] {
-  --moseek-font-ui: 'Moseek Inter', 'HarmonyOS Sans SC';
+  --moseek-font-ui: 'Moseek Inter', 'Moseek Harmony Regular';
 }
 
 :root[data-moseek-font='system'] {

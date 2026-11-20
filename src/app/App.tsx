@@ -72,7 +72,8 @@ export const App = () => {
 
   return (
     <>
-      <div ref={frameRef} className={styles.frame}>
+      <div ref={frameRef} className={styles.frame} data-chat-active={activeId !== null || undefined}>
+        <div className={styles.atmosphere} aria-hidden="true" />
         {isMobile ? <MobileSider /> : siderCollapsed ? null : <Sider />}
         <main className={styles.main}>
           {saveError ? (

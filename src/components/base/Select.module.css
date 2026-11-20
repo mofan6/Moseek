@@ -84,7 +84,9 @@
   padding: 4px;
   border-radius: 12px;
   border: 1px solid var(--dsw-alias-border-l2);
-  background: var(--dsw-specific-menu);
+  background: var(--moseek-glass-float);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   box-shadow: var(--dsw-shadow-lv3);
   outline: none;
 

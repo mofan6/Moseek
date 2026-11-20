@@ -1,46 +1,46 @@
 [data-moseek-palette='warm'] {
   --palette-hue: 38;
-  --palette-accent: 65%;
-  --palette-neutral: 43%;
-  --palette-swatch-fill: #8b541b;
+  --palette-accent: 43%;
+  --palette-neutral: 29%;
+  --palette-swatch-fill: #795935;
   --palette-swatch-bg: #faf7ef;
-  --palette-swatch-strip: #e8d8b8;
+  --palette-swatch-strip: #e8dac1;
 }
 
 [data-moseek-palette='ocean'] {
   --palette-hue: 214;
-  --palette-accent: 63%;
-  --palette-neutral: 28%;
+  --palette-accent: 38%;
+  --palette-neutral: 21%;
 }
 
 [data-moseek-palette='celadon'] {
-  --palette-hue: 174;
-  --palette-accent: 57%;
-  --palette-neutral: 24%;
+  --palette-hue: 166;
+  --palette-accent: 32%;
+  --palette-neutral: 18%;
 }
 
 [data-moseek-palette='pine'] {
-  --palette-hue: 138;
-  --palette-accent: 45%;
-  --palette-neutral: 22%;
+  --palette-hue: 142;
+  --palette-accent: 29%;
+  --palette-neutral: 17%;
 }
 
 [data-moseek-palette='violet'] {
-  --palette-hue: 267;
-  --palette-accent: 49%;
-  --palette-neutral: 27%;
+  --palette-hue: 264;
+  --palette-accent: 33%;
+  --palette-neutral: 20%;
 }
 
 [data-moseek-palette='rose'] {
-  --palette-hue: 338;
-  --palette-accent: 53%;
-  --palette-neutral: 27%;
+  --palette-hue: 343;
+  --palette-accent: 35%;
+  --palette-neutral: 20%;
 }
 
 [data-moseek-palette='maple'] {
-  --palette-hue: 17;
-  --palette-accent: 66%;
-  --palette-neutral: 32%;
+  --palette-hue: 21;
+  --palette-accent: 41%;
+  --palette-neutral: 24%;
 }
 
 [data-moseek-palette='graphite'] {
@@ -52,7 +52,7 @@
 [data-moseek-palette]:not([data-moseek-palette='warm']) {
   --palette-swatch-fill: hsl(var(--palette-hue) var(--palette-accent) 35%);
   --palette-swatch-bg: hsl(var(--palette-hue) var(--palette-neutral) 97%);
-  --palette-swatch-strip: hsl(var(--palette-hue) var(--palette-accent) 86%);
+  --palette-swatch-strip: hsl(var(--palette-hue) var(--palette-accent) 88%);
 }
 
 [data-ds-dark-theme] [data-moseek-palette]:not([data-moseek-palette='warm']) {
@@ -62,16 +62,15 @@
 }
 
 [data-ds-dark-theme] [data-moseek-palette='warm'] {
-  --palette-swatch-fill: #cb9a52;
+  --palette-swatch-fill: #c3a376;
   --palette-swatch-bg: #211b14;
-  --palette-swatch-strip: #594128;
+  --palette-swatch-strip: #52402d;
 }
 
 /* The original warm palette is defined in theme.css. The seven alternatives share color roles. */
 body[data-moseek-palette]:not([data-moseek-palette='warm']) {
   --palette-ink: var(--palette-hue) var(--palette-neutral);
   --palette-color: var(--palette-hue) var(--palette-accent);
-  --moseek-wash: hsl(var(--palette-color) 85%);
   --moseek-mark-fill: hsl(var(--palette-color) 32%);
   --moseek-mark-ink: hsl(var(--palette-color) 94%);
   --moseek-shadow-ink: 28 32 42;
@@ -119,7 +118,6 @@ body[data-moseek-palette]:not([data-moseek-palette='warm']) {
 }
 
 body[data-ds-dark-theme][data-moseek-palette]:not([data-moseek-palette='warm']) {
-  --moseek-wash: hsl(var(--palette-color) 22%);
   --moseek-shadow-ink: 0 0 0;
   --dsw-alias-bg-base: hsl(var(--palette-ink) 11%);
   --dsw-alias-bg-layer-2: hsl(var(--palette-ink) 15%);

@@ -8,7 +8,9 @@
   height: 100%;
   border-left: 1px solid var(--dsw-alias-border-l2);
   color: var(--dsw-alias-label-primary);
-  background: var(--dsw-alias-bg-base);
+  background: var(--moseek-glass-float);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .header {

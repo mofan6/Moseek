@@ -12,8 +12,8 @@ export const PALETTES = [
 export type Palette = (typeof PALETTES)[number]
 
 export const INTERFACE_FONTS = [
-  'harmony',
   'harmonyRegular',
+  'harmony',
   'sourceHanSans',
   'sourceHanSerif',
   'kai',

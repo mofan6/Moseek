@@ -2,8 +2,71 @@
   position: absolute;
   inset: 0;
   display: flex;
+  isolation: isolate;
   overflow: hidden;
   background-color: var(--dsw-alias-bg-base);
+}
+
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(
+    152deg,
+    var(--moseek-atmosphere-top),
+    var(--dsw-alias-bg-base) 56%,
+    var(--moseek-atmosphere-base)
+  );
+}
+
+.atmosphere::before,
+.atmosphere::after {
+  position: absolute;
+  inset: -16%;
+  content: '';
+}
+
+.atmosphere::before {
+  background:
+    radial-gradient(ellipse 43% 47% at 79% 25%, var(--moseek-atmosphere-glow), transparent 88%),
+    radial-gradient(ellipse 44% 39% at 28% 73%, var(--moseek-atmosphere-veil), transparent 92%),
+    radial-gradient(ellipse 43% 43% at 15% 21%, var(--moseek-atmosphere-shadow), transparent 91%);
+  animation: atmosphere-drift 25s ease-in-out infinite alternate;
+}
+
+.atmosphere::after {
+  background:
+    radial-gradient(ellipse 53% 15% at 52% 42%, var(--moseek-atmosphere-fold), transparent 90%),
+    radial-gradient(ellipse 52% 22% at 52% 57%, var(--moseek-atmosphere-shadow), transparent 82%);
+  transform: rotate(-19deg);
+  animation: atmosphere-fold 31s ease-in-out infinite alternate;
+}
+
+.frame[data-chat-active] .atmosphere::before,
+.frame[data-chat-active] .atmosphere::after {
+  opacity: 0.42;
+  animation-play-state: paused;
+}
+
+@keyframes atmosphere-drift {
+  to {
+    transform: translate(-4%, 4%) scale(1.05);
+  }
+}
+
+@keyframes atmosphere-fold {
+  to {
+    transform: translate(4%, -4%) rotate(-11deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atmosphere::before,
+  .atmosphere::after {
+    animation: none;
+  }
 }
 
 .main {

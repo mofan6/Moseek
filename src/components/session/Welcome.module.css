@@ -2,9 +2,6 @@
   position: absolute;
   inset: 0;
   display: flex;
-  background:
-    radial-gradient(ellipse at 82% 15%, var(--moseek-wash), transparent 54%),
-    var(--dsw-alias-bg-base);
 }
 
 .welcome {

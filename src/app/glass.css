@@ -1,0 +1,48 @@
+body {
+  --moseek-atmosphere-hue: var(--palette-hue, 38);
+  --moseek-atmosphere-ink: var(--moseek-atmosphere-hue) var(--palette-neutral, 29%);
+  --moseek-atmosphere-top: hsl(var(--moseek-atmosphere-ink) 98%);
+  --moseek-atmosphere-base: hsl(var(--moseek-atmosphere-ink) 94%);
+  --moseek-atmosphere-glow: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 43%) 75% / 58%);
+  --moseek-atmosphere-veil: hsl(
+    calc(var(--moseek-atmosphere-hue) + 26) var(--palette-neutral, 29%) 78% / 42%
+  );
+  --moseek-atmosphere-shadow: hsl(
+    calc(var(--moseek-atmosphere-hue) - 16) var(--palette-neutral, 29%) 48% / 14%
+  );
+  --moseek-atmosphere-fold: rgb(255 255 255 / 64%);
+  --moseek-glass-input: var(--dsw-specific-input-major);
+  --moseek-glass-rail: var(--dsw-specific-sidebar-fill);
+  --moseek-glass-float: var(--dsw-alias-bg-layer-3);
+  --moseek-glass-edge: rgb(255 255 255 / 78%);
+  --moseek-glass-sheen: rgb(255 255 255 / 65%);
+}
+
+body[data-ds-dark-theme] {
+  --moseek-atmosphere-top: hsl(var(--moseek-atmosphere-ink) 14%);
+  --moseek-atmosphere-base: hsl(var(--moseek-atmosphere-ink) 8%);
+  --moseek-atmosphere-glow: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 43%) 53% / 44%);
+  --moseek-atmosphere-veil: hsl(
+    calc(var(--moseek-atmosphere-hue) + 26) var(--palette-neutral, 29%) 48% / 36%
+  );
+  --moseek-atmosphere-shadow: hsl(var(--moseek-atmosphere-ink) 5% / 75%);
+  --moseek-atmosphere-fold: hsl(
+    calc(var(--moseek-atmosphere-hue) - 16) var(--palette-neutral, 29%) 73% / 24%
+  );
+  --moseek-glass-edge: rgb(255 255 255 / 13%);
+  --moseek-glass-sheen: rgb(255 255 255 / 10%);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body {
+    --moseek-glass-input: hsl(var(--moseek-atmosphere-ink) 99% / 65%);
+    --moseek-glass-rail: hsl(var(--moseek-atmosphere-ink) 95% / 65%);
+    --moseek-glass-float: hsl(var(--moseek-atmosphere-ink) 99% / 91%);
+  }
+
+  body[data-ds-dark-theme] {
+    --moseek-glass-input: hsl(var(--moseek-atmosphere-ink) 18% / 72%);
+    --moseek-glass-rail: hsl(var(--moseek-atmosphere-ink) 12% / 71%);
+    --moseek-glass-float: hsl(var(--moseek-atmosphere-ink) 18% / 91%);
+  }
+}
