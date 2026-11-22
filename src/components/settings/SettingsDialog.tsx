@@ -18,11 +18,14 @@ import { useChatStore } from '../../services/chat/store.js'
 import { regionCodes, getRegionName, provinces } from '../../services/location.js'
 import {
   isChineseBrowser,
+  REPLY_STYLES,
   setContextMode,
   setLocale,
   setLocation,
+  setReplyStyle,
   setTtsVoice,
   useSettings,
+  type ReplyStyle,
 } from '../../services/settings.js'
 import { useTranslate, type TranslationKey, type TranslationMessage } from '../../i18n/index.js'
 import { Button } from '../base/Button.js'
@@ -98,6 +101,7 @@ const SettingsContent = () => {
             <>
               <AppearanceSettings />
               <LocaleSetting />
+              <ReplyStyleSetting />
               <ContextModeSetting />
               <TtsVoiceSetting />
               <LocationSetting />
@@ -292,6 +296,34 @@ const LocaleSetting = () => {
             { value: 'en-US', label: t('settingsLocaleEnUS'), lang: 'en' },
           ]}
           onChange={setLocale}
+        />
+      }
+    />
+  )
+}
+
+const replyStyleText: Record<ReplyStyle, [TranslationKey, TranslationKey]> = {
+  concise: ['replyStyleConcise', 'replyStyleConciseDescription'],
+  guided: ['replyStyleGuided', 'replyStyleGuidedDescription'],
+  structured: ['replyStyleStructured', 'replyStyleStructuredDescription'],
+  precise: ['replyStylePrecise', 'replyStylePreciseDescription'],
+  conversational: ['replyStyleConversational', 'replyStyleConversationalDescription'],
+}
+
+const ReplyStyleSetting = () => {
+  const t = useTranslate()
+  const style = useSettings((state) => state.replyStyle)
+  return (
+    <SettingCell
+      label={t('settingsReplyStyle')}
+      description={t(replyStyleText[style][1])}
+      status={null}
+      action={
+        <Select
+          ariaLabel={t('settingsReplyStyle')}
+          value={style}
+          options={REPLY_STYLES.map((value) => ({ value, label: t(replyStyleText[value][0]) }))}
+          onChange={setReplyStyle}
         />
       }
     />

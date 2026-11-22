@@ -11,6 +11,8 @@ export type Locale = 'zh-CN' | 'en-US'
 export type ThemePreference = 'light' | 'dark' | 'system'
 export const CONTEXT_MODES = ['recent', 'single', 'full'] as const
 export type ContextMode = (typeof CONTEXT_MODES)[number]
+export const REPLY_STYLES = ['concise', 'guided', 'structured', 'precise', 'conversational'] as const
+export type ReplyStyle = (typeof REPLY_STYLES)[number]
 
 /** 本机设置保存在 localStorage。 */
 type Settings = {
@@ -25,6 +27,7 @@ type Settings = {
   reasoning: ReasoningLevel
   search: boolean
   contextMode: ContextMode
+  replyStyle: ReplyStyle
   siderCollapsed: boolean
 }
 
@@ -41,6 +44,7 @@ const KEYS = {
   reasoning: 'moseek:reasoning',
   search: 'moseek:search',
   contextMode: 'moseek:context-mode',
+  replyStyle: 'moseek:reply-style',
   siderCollapsed: 'moseek:sider-collapsed',
 } as const
 
@@ -127,6 +131,7 @@ export const useSettings = create<Settings>(() => ({
   reasoning: initialReasoning(),
   search: read(KEYS.search) === 'true',
   contextMode: readChoice(KEYS.contextMode, CONTEXT_MODES),
+  replyStyle: readChoice(KEYS.replyStyle, REPLY_STYLES),
   siderCollapsed: read(KEYS.siderCollapsed) === 'true',
 }))
 
@@ -187,6 +192,11 @@ export const setSearch = (search: boolean) => {
 export const setContextMode = (contextMode: ContextMode) => {
   write(KEYS.contextMode, contextMode)
   useSettings.setState({ contextMode })
+}
+
+export const setReplyStyle = (replyStyle: ReplyStyle) => {
+  write(KEYS.replyStyle, replyStyle)
+  useSettings.setState({ replyStyle })
 }
 
 export const setSiderCollapsed = (siderCollapsed: boolean) => {

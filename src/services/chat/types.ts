@@ -9,7 +9,7 @@ import type {
   StopReason,
   TextCitation,
 } from '../api/types.js'
-import type { ContextMode } from '../settings.js'
+import type { ContextMode, ReplyStyle } from '../settings.js'
 import type { TokenCounts } from './usage.js'
 
 /**
@@ -86,6 +86,8 @@ export type AssistantMessage = MessageBranch & {
   /** 请求时是否声明 deepseek_web_search */
   search?: boolean
   contextMode?: ContextMode
+  /** 本轮生成时选用的风格，续写与重试沿用。 */
+  replyStyle?: ReplyStyle
   omittedHistoryRounds?: number
   /** 本轮请求的系统信息快照；各回答版本独立保存，续写沿用。历史消息中缺省的快照保持为空。 */
   latestReminder?: string

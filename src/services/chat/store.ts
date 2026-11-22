@@ -5,7 +5,7 @@ import { ApiError, streamMessage } from '../api/client.js'
 import { DEFAULT_MODEL } from '../api/models.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
-import { useSettings } from '../settings.js'
+import { REPLY_STYLES, useSettings } from '../settings.js'
 import { appendBranch, getVisibleMessages, normalizeSession, selectVersion } from './branches.js'
 import * as db from './db.js'
 import {
@@ -25,9 +25,9 @@ import {
 } from './reply.js'
 import {
   getServerTools,
+  getSystemPrompt,
   MAX_OUTPUT_TOKENS,
   selectRequestHistory,
-  SYSTEM_PROMPT,
 } from './requestPolicy.js'
 import {
   toSessionSummary,
@@ -246,9 +246,9 @@ export const bindChatPersistence = () => {
   }
 }
 
-/** 每条回复保留发送时的模型和推理设置。 */
+/** 每条回复保留发送时的请求设置。 */
 const createReply = (): AssistantMessage => {
-  const { model, reasoning, search, contextMode } = useSettings.getState()
+  const { model, reasoning, search, contextMode, replyStyle } = useSettings.getState()
   return {
     id: createId(),
     role: 'assistant',
@@ -258,6 +258,7 @@ const createReply = (): AssistantMessage => {
     reasoning,
     search: model === 'deepseek-flash' && search,
     contextMode,
+    replyStyle,
     prefix: true,
     status: 'pending',
     blocks: [],
@@ -978,6 +979,8 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
   const reasoning = initial.reasoning ?? (initial.thinking ? 'high' : 'off')
   const supportsWebTools = model === 'deepseek-flash'
   const contextMode = initial.contextMode ?? useSettings.getState().contextMode
+  const replyStyle = initial.replyStyle ?? REPLY_STYLES[0]
+  const system = getSystemPrompt(replyStyle)
   const { history, omittedHistoryRounds } = selectRequestHistory(original.history, contextMode)
   const request = { ...original, history }
   const tools = supportsWebTools
@@ -988,7 +991,7 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
     titleRequests.add(controller)
   }
   set((state) => ({ streaming: { ...state.streaming, [sessionId]: controller } }))
-  let reply: AssistantMessage = { ...initial, contextMode, omittedHistoryRounds }
+  let reply: AssistantMessage = { ...initial, contextMode, omittedHistoryRounds, replyStyle }
   let frame = 0
   const flush = () => {
     cancelAnimationFrame(frame)
@@ -1025,7 +1028,7 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
           useSettings.getState().apiKey ?? '',
           {
             model,
-            system: SYSTEM_PROMPT,
+            system,
             messages,
             max_tokens: MAX_OUTPUT_TOKENS[reasoning],
             thinking: { type: reasoning === 'off' ? 'disabled' : 'enabled' },
