@@ -217,7 +217,7 @@ export const MessageList = ({
           role="region"
           aria-label={t('conversationMessages')}
         >
-          <div ref={contentRef} className={styles.column}>
+          <div ref={contentRef} className={styles.column} data-sidebar-motion="center">
             {messages.map((message, index) =>
               message.role === 'user' ? (
                 <UserMessage

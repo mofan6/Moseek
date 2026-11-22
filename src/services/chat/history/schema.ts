@@ -1,5 +1,6 @@
 import { BackupError, fail } from './errors.js'
 import { REASONING_LEVELS } from '../../api/models.js'
+import { CONTEXT_MODES } from '../../settings.js'
 import {
   EXPORT_FORMAT_VERSION,
   type ChatMessage,
@@ -209,7 +210,7 @@ const moseekMetadata: Read<NonNullable<ChatMessage['moseek']>> = (value) => {
     reasoning:
       item.reasoning === undefined ? undefined : oneOf(...REASONING_LEVELS)(item.reasoning),
     context_mode:
-      item.context_mode === undefined ? undefined : oneOf('recent', 'full')(item.context_mode),
+      item.context_mode === undefined ? undefined : oneOf(...CONTEXT_MODES)(item.context_mode),
     omitted_history_rounds: optionalCount(item.omitted_history_rounds),
     token_counts: counts && {
       cacheHit: count(counts.cacheHit),

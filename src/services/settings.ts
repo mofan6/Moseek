@@ -9,7 +9,8 @@ export type Locale = 'zh-CN' | 'en-US'
 
 /** 主题偏好；默认跟随系统 */
 export type ThemePreference = 'light' | 'dark' | 'system'
-export type ContextMode = 'recent' | 'full'
+export const CONTEXT_MODES = ['recent', 'single', 'full'] as const
+export type ContextMode = (typeof CONTEXT_MODES)[number]
 
 /** 本机设置保存在 localStorage。 */
 type Settings = {
@@ -125,7 +126,7 @@ export const useSettings = create<Settings>(() => ({
   model: read(KEYS.model) === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : DEFAULT_MODEL,
   reasoning: initialReasoning(),
   search: read(KEYS.search) === 'true',
-  contextMode: read(KEYS.contextMode) === 'full' ? 'full' : 'recent',
+  contextMode: readChoice(KEYS.contextMode, CONTEXT_MODES),
   siderCollapsed: read(KEYS.siderCollapsed) === 'true',
 }))
 

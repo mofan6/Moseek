@@ -809,17 +809,21 @@ const ensureServerId = async (apiKey: string, file: FileAttachment): Promise<str
   return uploadAttachment(apiKey, file.id, blob, file.name, file.isImage)
 }
 
-/** 用会话里的最新消息替换请求快照：重传前会重置附件的 serverId，快照必须跟着更新 */
+/** 从最新会话同步附件，保留请求中已经截取的文本与剔除的历史附件。 */
 const refreshRequest = (sessionId: string, request: Request): Request => {
   const session = getSession(sessionId)
   if (!session) {
     return request
   }
   const byId = new Map(session.messages.map((message) => [message.id, message]))
-  const pick = <T extends Message>(message: T): T =>
-    (byId.get(message.id) as T | undefined) ?? message
+  const pick = (message: UserMessage): UserMessage => {
+    const latest = byId.get(message.id)
+    return message.files.length && latest?.role === 'user'
+      ? { ...message, files: latest.files }
+      : message
+  }
   return {
-    history: request.history.map(pick),
+    history: request.history.map((message) => (message.role === 'user' ? pick(message) : message)),
     question: pick(request.question),
     prefix: request.prefix,
   }
@@ -882,15 +886,7 @@ const prepareFiles = async (sessionId: string, request: Request, signal: AbortSi
     }
   }
 
-  // 用补齐后的会话重新取历史与提问，保证请求里都是 serverId
-  const session = getSession(sessionId)
-  const resolve = <T extends Message>(message: T): T =>
-    (session?.messages.find((m) => m.id === message.id) as T | undefined) ?? message
-  return {
-    history: request.history.map(resolve),
-    question: resolve(request.question),
-    prefix: request.prefix,
-  }
+  return refreshRequest(sessionId, request)
 }
 
 /** 本次请求实际会用到的服务端 file_id */

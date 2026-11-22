@@ -305,7 +305,11 @@ const ContextModeSetting = () => {
     <SettingCell
       label={t('settingsContextMode')}
       description={t(
-        mode === 'recent' ? 'settingsContextRecentDescription' : 'settingsContextFullDescription'
+        mode === 'recent'
+          ? 'settingsContextRecentDescription'
+          : mode === 'single'
+            ? 'settingsContextSingleDescription'
+            : 'settingsContextFullDescription'
       )}
       status={null}
       action={
@@ -314,6 +318,7 @@ const ContextModeSetting = () => {
           value={mode}
           options={[
             { value: 'recent', label: t('settingsContextRecent') },
+            { value: 'single', label: t('settingsContextSingle') },
             { value: 'full', label: t('settingsContextFull') },
           ]}
           onChange={setContextMode}

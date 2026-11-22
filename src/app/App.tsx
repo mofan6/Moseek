@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, type MouseEvent } from 'react'
+import { flushSync } from 'react-dom'
 import { useTranslate } from '../i18n/index.js'
 import { setSiderCollapsed, useSettings } from '../services/settings.js'
 import { useIsMobile, useMobileViewport, usePreventPageScroll } from './viewport.js'
@@ -46,6 +47,7 @@ export const App = () => {
   )
   const frameRef = useMobileViewport(isMobile)
   const restoreSidebarFocus = useRef(false)
+  const sidebarAnimations = useRef<Animation[]>([])
   const streaming = useChatStore((state) =>
     state.activeId === null ? false : Object.hasOwn(state.streaming, state.activeId)
   )
@@ -55,7 +57,41 @@ export const App = () => {
 
   const toggleSidebar = (event: MouseEvent<HTMLButtonElement>) => {
     restoreSidebarFocus.current = event.detail === 0
-    setSiderCollapsed(!siderCollapsed)
+    const frame = frameRef.current
+    if (!frame || matchMedia('(prefers-reduced-motion: reduce)').matches || !frame.animate) {
+      sidebarAnimations.current.forEach((animation) => animation.cancel())
+      setSiderCollapsed(!siderCollapsed)
+      return
+    }
+
+    // Settle the layout once, then slide the visible columns from their previous positions.
+    const targets = Array.from(frame.querySelectorAll<HTMLElement>('[data-sidebar-motion]'))
+    const horizontalAnchor = (element: HTMLElement) => {
+      const { left, width } = element.getBoundingClientRect()
+      return element.dataset.sidebarMotion === 'center' ? left + width / 2 : left
+    }
+    const before = targets.map(horizontalAnchor)
+    sidebarAnimations.current.forEach((animation) => animation.cancel())
+    flushSync(() => setSiderCollapsed(!siderCollapsed))
+    const after = targets.map(horizontalAnchor)
+    const style = getComputedStyle(frame)
+    const animations = targets.flatMap((target, index) => {
+      const delta = before[index] - after[index]
+      return Math.abs(delta) < 0.5
+        ? []
+        : [
+            target.animate([{ translate: `${delta}px` }, { translate: '0px' }], {
+              duration: Number(style.getPropertyValue('--moseek-sidebar-duration-ms')),
+              easing: style.getPropertyValue('--ds-ease-in-out').trim(),
+            }),
+          ]
+    })
+    sidebarAnimations.current = animations
+    void Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
+      if (sidebarAnimations.current === animations) {
+        sidebarAnimations.current = []
+      }
+    })
   }
 
   useLayoutEffect(() => {
@@ -97,7 +133,11 @@ export const App = () => {
         ) : (
           <Sider collapsed={siderCollapsed} onCollapse={toggleSidebar} />
         )}
-        <main className={styles.main} data-sidebar-collapsed={siderCollapsed || undefined}>
+        <main
+          className={styles.main}
+          data-sidebar-expanded={!isMobile && !siderCollapsed ? true : undefined}
+          data-sidebar-collapsed={siderCollapsed || undefined}
+        >
           {saveError ? (
             <div className={styles.saveError} role="alert">
               <span>{t('sessionSaveFailed')}</span>

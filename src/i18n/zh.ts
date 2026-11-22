@@ -109,9 +109,11 @@ export const zh = {
   settingsLocalePreference: '语言',
   settingsContextMode: '对话上下文',
   settingsContextRecent: '近期对话',
+  settingsContextSingle: '仅当前问题',
   settingsContextFull: '完整对话',
   settingsContextRecentDescription:
-    '长对话只发送近期轮次，完整记录保存在本地。若要再次查看网页原文，可重发链接。',
+    '最多发送最近 6 轮，按约 2,000 个历史 Token 控制请求。超长轮次只发送文本节选。',
+  settingsContextSingleDescription: '只发送当前问题及其附件，适合在同一会话里换话题。',
   settingsContextFullDescription: '每轮会发送完整可用历史，长对话与网页原文可能占用更多 Token。',
   settingsTtsVoice: '朗读音色',
   settingsTtsVoiceStella: '海星（女声）',

@@ -104,7 +104,7 @@ export const Sider = ({
                   key={session.id}
                   session={session}
                   active={session.id === activeId}
-                  onDelete={() => setDeleting(session)}
+                  onDelete={setDeleting}
                 />
               ))}
             </div>

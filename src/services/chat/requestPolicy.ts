@@ -1,8 +1,8 @@
 import type { ReasoningLevel } from '../api/models.js'
 import type { CreateMessageRequest } from '../api/types.js'
 import type { ContextMode } from '../settings.js'
-import { getContextRounds } from './reply.js'
-import type { Message, UserMessage } from './types.js'
+import { getContextRounds, getReplyText } from './reply.js'
+import type { AssistantMessage, Message, UserMessage } from './types.js'
 
 export const SYSTEM_PROMPT = [
   '你是 Moseek，由 DeepSeek 提供支持。用用户的语言交流，按要求调整语气、篇幅和格式。',
@@ -19,40 +19,74 @@ export const MAX_OUTPUT_TOKENS: Record<ReasoningLevel, number> = {
   max: 16384,
 }
 
-const HISTORY_LIMIT = 12_000
-const HISTORY_TARGET = 8_000
+const HISTORY_LIMIT = 2_000
+const HISTORY_TARGET = 1_500
+const ROUND_LIMIT = 6
+const ROUND_TARGET = 4
+const EXCERPT_EDGE = 160
 
 // 估算常见中英文请求大小。模型、文件解析和审核的真实用量以服务端为准。
 const approximateTokens = (text: string) => {
+  if (text.length >= HISTORY_LIMIT * 3) {
+    return HISTORY_LIMIT
+  }
   const nonAscii = text.replace(/\p{ASCII}/gu, '').length
   return Math.ceil((text.length - nonAscii) / 3 + nonAscii * 1.5)
 }
+
+const estimateRound = (user: UserMessage, reply: AssistantMessage) => {
+  const files = user.files.reduce(
+    (sum, file) => sum + (file.isImage ? 1024 : Math.max(256, Math.ceil(file.size / 3))),
+    0
+  )
+  const answer = reply.blocks.reduce(
+    (sum, block) => sum + (block.type === 'text' ? approximateTokens(block.text) : 0),
+    0
+  )
+  return 48 + approximateTokens(user.content) + files + answer
+}
+
+const excerpt = (text: string) =>
+  text.length <= EXCERPT_EDGE * 2
+    ? text
+    : `${text.slice(0, EXCERPT_EDGE)}\n[…]\n${text.slice(-EXCERPT_EDGE)}`.toWellFormed()
 
 export const selectRequestHistory = (history: Message[], mode: ContextMode) => {
   if (mode === 'full') {
     return { history, omittedHistoryRounds: 0 }
   }
   const rounds = getContextRounds(history)
+  if (mode === 'single') {
+    return { history: [], omittedHistoryRounds: rounds.length }
+  }
   const sizes: number[] = []
   let estimated = 0
   let start = 0
-  for (const [user, assistant] of rounds) {
-    const files = user.files.reduce(
-      (sum, file) => sum + (file.isImage ? 1024 : Math.max(256, Math.ceil(file.size / 3))),
-      0
-    )
-    const answer = assistant.blocks.reduce(
-      (sum, block) => sum + (block.type === 'text' ? approximateTokens(block.text) : 0),
-      0
-    )
-    const size = 32 + approximateTokens(user.content) + files + answer
+  for (const [index, [user, assistant]] of rounds.entries()) {
+    let size = estimateRound(user, assistant)
+    if (size > HISTORY_LIMIT) {
+      // 留下超长轮次两端的线索；历史大附件不反复计入上下文。
+      const compactUser = {
+        ...user,
+        content: [excerpt(user.content), user.files.length ? '[Earlier attachments omitted]' : '']
+          .filter(Boolean)
+          .join('\n'),
+        files: [],
+      }
+      const compactReply: AssistantMessage = {
+        ...assistant,
+        blocks: [{ type: 'text', text: excerpt(getReplyText(assistant)) }],
+      }
+      rounds[index] = [compactUser, compactReply]
+      size = estimateRound(compactUser, compactReply)
+    }
     estimated += size
     sizes.push(size)
-    if (estimated > HISTORY_LIMIT) {
-      // 按轮移除，降到较低水位。积累到下次超限前，请求前缀保持稳定。
-      while (estimated > HISTORY_TARGET) {
-        estimated -= sizes[start++]
-      }
+    // 批量移除，积累到下次超限前保留相同前缀，给上下文缓存留出命中机会。
+    const roundTarget = sizes.length - start > ROUND_LIMIT ? ROUND_TARGET : ROUND_LIMIT
+    const tokenTarget = estimated > HISTORY_LIMIT ? HISTORY_TARGET : HISTORY_LIMIT
+    while (estimated > tokenTarget || sizes.length - start > roundTarget) {
+      estimated -= sizes[start++]
     }
   }
   return { history: rounds.slice(start).flat(), omittedHistoryRounds: start }

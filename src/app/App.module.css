@@ -1,5 +1,7 @@
 .frame {
-  --moseek-sidebar-duration: 260ms;
+  --moseek-sidebar-width: 246px;
+  --moseek-sidebar-duration-ms: 260;
+  --moseek-sidebar-duration: calc(var(--moseek-sidebar-duration-ms) * 1ms);
   --moseek-sidebar-motion: var(--moseek-sidebar-duration) var(--ds-ease-in-out);
   position: absolute;
   inset: 0;
@@ -51,7 +53,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .frame {
-    --moseek-sidebar-duration: 0ms;
+    --moseek-sidebar-duration-ms: 0;
   }
 
   .atmosphere::before {
@@ -65,6 +67,10 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+
+  &[data-sidebar-expanded] {
+    margin-inline-start: var(--moseek-sidebar-width);
+  }
 }
 
 .themeShortcut {

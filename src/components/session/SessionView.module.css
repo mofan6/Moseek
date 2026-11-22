@@ -22,7 +22,6 @@
   text-overflow: ellipsis;
   font: var(--dsw-font-s-strong-14);
   color: var(--dsw-alias-label-primary);
-  transition: margin-inline-start var(--moseek-sidebar-motion);
 }
 
 :global([data-sidebar-collapsed]) .title {
@@ -39,7 +38,6 @@
   max-width: calc(100% - 32px);
   margin: 0 auto;
   padding-bottom: 18px;
-  transition: max-width var(--moseek-sidebar-motion);
 }
 
 :global([data-sidebar-collapsed]) .inputContainer {

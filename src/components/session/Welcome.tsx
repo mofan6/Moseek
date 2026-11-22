@@ -15,7 +15,7 @@ export const Welcome = () => {
   return (
     <div className={styles.container}>
       {isMobile ? <MobileHeader /> : null}
-      <div className={styles.welcome}>
+      <div className={styles.welcome} data-sidebar-motion="center">
         <h1 className={styles.greeting}>{t('welcomeMessageChat250808')}</h1>
         <ChatInput sessionId={null} />
         {hasApiKey ? null : (

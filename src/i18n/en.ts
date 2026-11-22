@@ -114,9 +114,12 @@ export const en = {
   settingsLocalePreference: 'Language',
   settingsContextMode: 'Conversation context',
   settingsContextRecent: 'Recent turns',
+  settingsContextSingle: 'Current question only',
   settingsContextFull: 'Full conversation',
   settingsContextRecentDescription:
-    'In long chats, send recent turns while keeping the full chat on this device. Send a link again to revisit the original page.',
+    'Send up to six recent turns with an estimated budget of 2,000 history tokens. Oversized turns are sent as text excerpts.',
+  settingsContextSingleDescription:
+    'Send the current question and its attachments. Use this when changing topics in the same chat.',
   settingsContextFullDescription:
     'Send all usable history each turn. Long chats and previously read pages can use more tokens.',
   settingsTtsVoice: 'Read-aloud voice',
