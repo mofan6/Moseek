@@ -308,6 +308,8 @@ const replyStyleText: Record<ReplyStyle, [TranslationKey, TranslationKey]> = {
   structured: ['replyStyleStructured', 'replyStyleStructuredDescription'],
   precise: ['replyStylePrecise', 'replyStylePreciseDescription'],
   conversational: ['replyStyleConversational', 'replyStyleConversationalDescription'],
+  socratic: ['replyStyleSocratic', 'replyStyleSocraticDescription'],
+  creative: ['replyStyleCreative', 'replyStyleCreativeDescription'],
 }
 
 const ReplyStyleSetting = () => {

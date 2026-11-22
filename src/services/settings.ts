@@ -11,7 +11,15 @@ export type Locale = 'zh-CN' | 'en-US'
 export type ThemePreference = 'light' | 'dark' | 'system'
 export const CONTEXT_MODES = ['recent', 'single', 'full'] as const
 export type ContextMode = (typeof CONTEXT_MODES)[number]
-export const REPLY_STYLES = ['concise', 'guided', 'structured', 'precise', 'conversational'] as const
+export const REPLY_STYLES = [
+  'concise',
+  'guided',
+  'structured',
+  'precise',
+  'conversational',
+  'socratic',
+  'creative',
+] as const
 export type ReplyStyle = (typeof REPLY_STYLES)[number]
 
 /** 本机设置保存在 localStorage。 */
