@@ -17,6 +17,7 @@ import { MobileHeader } from '../components/session/MobileHeader.js'
 import { Welcome } from '../components/session/Welcome.js'
 import { SettingsDialog } from '../components/settings/SettingsDialog.js'
 import { Toast } from '../components/base/Toast.js'
+import { WorkspaceDialogs } from '../components/workspace/WorkspaceDialogs.js'
 import { ThemeToggle } from '../components/base/ThemeToggle.js'
 import { showToast } from '../components/base/toastState.js'
 import { onUploadNotice } from '../services/attachments.js'
@@ -126,7 +127,11 @@ export const App = () => {
 
   return (
     <>
-      <div ref={frameRef} className={styles.frame} data-chat-active={activeId !== null || undefined}>
+      <div
+        ref={frameRef}
+        className={styles.frame}
+        data-chat-active={activeId !== null || undefined}
+      >
         <div className={styles.atmosphere} aria-hidden="true" />
         {isMobile ? (
           <MobileSider />
@@ -190,6 +195,7 @@ export const App = () => {
         {isMobile ? null : <ThemeToggle className={styles.themeShortcut} />}
       </div>
       <SettingsDialog />
+      <WorkspaceDialogs />
       <Toast />
     </>
   )

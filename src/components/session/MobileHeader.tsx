@@ -6,7 +6,7 @@ import { openMobileSider } from '../sider/mobileSiderState.js'
 import styles from './MobileHeader.module.css'
 
 /** 移动端顶栏：左侧菜单打开侧边栏；会话页再显示标题与开启新对话 */
-export const MobileHeader = ({ title }: { title?: string }) => {
+export const MobileHeader = ({ title, actions }: { title?: string; actions?: ReactNode }) => {
   const t = useTranslate()
   return (
     <div className={styles.header} data-home={title === undefined || undefined}>
@@ -17,9 +17,12 @@ export const MobileHeader = ({ title }: { title?: string }) => {
         aria-label={t('expandSiderbarButton')}
         onClick={openMobileSider}
       />
-      {title === undefined ? <div className={styles.title}>{t('appName')}</div> : (
+      {title === undefined ? (
+        <div className={styles.title}>{t('appName')}</div>
+      ) : (
         <>
           <div className={styles.title}>{title}</div>
+          {actions}
           <IconButton
             size="xl"
             tone="primary"
@@ -32,3 +35,4 @@ export const MobileHeader = ({ title }: { title?: string }) => {
     </div>
   )
 }
+import type { ReactNode } from 'react'

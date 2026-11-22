@@ -29,3 +29,10 @@
   margin: 0 auto;
   padding-bottom: 24px;
 }
+
+.historyPages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 16px;
+}

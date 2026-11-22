@@ -12,8 +12,8 @@
   border-radius: 16px;
   border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
   background:
-    linear-gradient(117deg, transparent 18%, var(--moseek-glass-sheen) 43%, transparent 64%)
-      100% 50% / 190% 100% no-repeat,
+    linear-gradient(117deg, transparent 18%, var(--moseek-glass-sheen) 43%, transparent 64%) 100%
+      50% / 190% 100% no-repeat,
     var(--moseek-glass-input);
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
@@ -465,5 +465,33 @@
   .wrapper,
   .sendButton {
     transition: none;
+  }
+}
+.requestOptions {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding-block: 2px 4px;
+}
+
+.singleTurn {
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-pressed='true'] {
+    background: var(--dsw-alias-button-ghost-active-fill);
+    color: var(--dsw-alias-brand-text);
+    border-color: var(--dsw-alias-button-ghost-active-border);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
   }
 }

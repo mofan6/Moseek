@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import { createId } from '../../utils/id.js'
 import { toSessionSummary, type Session, type SessionSummary } from './types.js'
 
 /** IndexedDB 存储结构版本；新增或调整存储、索引时递增。 */
@@ -81,17 +82,35 @@ export const loadSessionSummaries = async (): Promise<SessionSummary[]> =>
 export const loadSession = async (id: string): Promise<Session | undefined> =>
   (await getDB()).get('sessions', id)
 
-export const saveSession = async (session: Session, files: StoredFile[] = []): Promise<void> => {
-  const summary = storedSummary(session)
+export type SessionWriteBase = { id: string; revision?: string }
+
+/** 保存时在同一事务内核对读到的版本。冲突时保留两个会话。 */
+export const saveSession = async (
+  session: Session,
+  files: StoredFile[],
+  base: SessionWriteBase | undefined,
+  recoveredTitle: string
+) => {
   const tx = (await getDB()).transaction(['sessions', 'sessionSummaries', 'files'], 'readwrite')
-  await Promise.all([
+  const [result] = await Promise.all([
     (async () => {
       try {
+        const sessions = tx.objectStore('sessions')
+        const current = await sessions.get(base?.id ?? session.id)
+        const conflict = base ? !current || current.revision !== base.revision : !!current
+        const id = conflict ? createId() : (base?.id ?? session.id)
+        const saved = {
+          ...session,
+          id,
+          title: id === session.id ? session.title : recoveredTitle,
+          revision: createId(),
+        }
         for (const file of files) {
           await tx.objectStore('files').put(file)
         }
-        await tx.objectStore('sessions').put(session)
-        await tx.objectStore('sessionSummaries').put(summary)
+        await sessions.put(saved)
+        await tx.objectStore('sessionSummaries').put(storedSummary(saved))
+        return { saved, original: conflict && current ? toSessionSummary(current) : undefined }
       } catch (error) {
         abortTransaction(tx)
         throw error
@@ -99,6 +118,7 @@ export const saveSession = async (session: Session, files: StoredFile[] = []): P
     })(),
     tx.done,
   ])
+  return result
 }
 
 /** 未打开的会话也可重命名，只读取该会话，原子更新详情和列表。 */
@@ -111,6 +131,7 @@ export const renameSession = async (id: string, title: string): Promise<void> =>
         const session = await sessions.get(id)
         if (session) {
           session.title = title
+          session.revision = createId()
           await sessions.put(session)
           await tx.objectStore('sessionSummaries').put(storedSummary(session))
         }
@@ -225,7 +246,8 @@ export const commitStaging = async (): Promise<SessionSummary[]> => {
         cursor;
         cursor = await cursor.continue()
       ) {
-        await target.put(cursor.value)
+        const value = to === 'sessions' ? { ...cursor.value, revision: createId() } : cursor.value
+        await target.put(value)
         if (to === 'sessions') {
           const summary = storedSummary(cursor.value as Session)
           await tx.objectStore('sessionSummaries').put(summary)

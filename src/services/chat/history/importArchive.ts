@@ -83,20 +83,23 @@ export const importArchive = async (file: File): Promise<void> => {
     fail('backupUnrecognized')
   }
   const imported = new Set<string>()
-  const images = new Map<string, string>()
+  const originals = new Map<string, FileEntry>()
   /** 已保存的原件：文件 ID → MIME。同一图片出现在多个会话目录时只保存一次。 */
   const stored = new Map<string, string>()
   let manifest = false
+  let full = false
   let index: SessionIndexEntry[] | undefined
   let currentSessionId: string | undefined
 
-  const saveImage = async (entry: ArchiveEntry, id: string) => {
+  const saveOriginal = async (entry: ArchiveEntry, { id, file_name, is_image }: FileEntry) => {
     if (stored.has(id)) {
       await skipEntry(entry)
       return
     }
     const data = await readEntry(entry)
-    const type = imageType(new Uint8Array(await data.slice(0, 16).arrayBuffer()))
+    const type = is_image
+      ? imageType(new Uint8Array(await data.slice(0, 16).arrayBuffer()))
+      : resolveMimeType(new File([], file_name))
     await db.saveStagingFiles([{ id, blob: new Blob([data], { type }) }])
     stored.set(id, type)
   }
@@ -109,20 +112,20 @@ export const importArchive = async (file: File): Promise<void> => {
         if (path !== MANIFEST_PATH) {
           fail('backupUnrecognized')
         }
-        checkManifest(await readJson(entry))
+        full = checkManifest(await readJson(entry))
         manifest = true
       } else if (path === USER_PATH && !index && imported.size === 0) {
         // 账号信息（已脱敏）不导入；文件可能缺失。
         await skipEntry(entry)
       } else if (sessionId !== null && !index) {
-        const local = toLocalSession(readSessionFile(await readJson(entry)))
+        const local = toLocalSession(readSessionFile(await readJson(entry)), full)
         if (local.session.id !== sessionId || imported.has(sessionId)) {
           fail('backupIncomplete')
         }
         imported.add(sessionId)
         currentSessionId = sessionId
-        for (const [imagePath, id] of local.images) {
-          images.set(imagePath, id)
+        for (const [filePath, original] of local.originals) {
+          originals.set(filePath, original)
         }
         await db.addStagingSession(local.session)
       } else if (path === INDEX_PATH && !index) {
@@ -133,8 +136,8 @@ export const importArchive = async (file: File): Promise<void> => {
           : currentSessionId && path.startsWith(sessionFilesDir(currentSessionId))
       ) {
         // 没有被引用的条目不保存，引用了但缺失的图片只展示文件名。
-        const id = images.get(path)
-        await (id === undefined ? skipEntry(entry) : saveImage(entry, id))
+        const original = originals.get(path)
+        await (original === undefined ? skipEntry(entry) : saveOriginal(entry, original))
       } else {
         fail('backupIncomplete')
       }
@@ -157,3 +160,5 @@ export const importArchive = async (file: File): Promise<void> => {
   }
   await db.updateStagingFileTypes(stored)
 }
+import { resolveMimeType } from '../../attachments.js'
+import type { FileEntry } from './format.js'

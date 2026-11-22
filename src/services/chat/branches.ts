@@ -115,3 +115,29 @@ export const selectVersion = (original: Session, messageId: string): Session => 
     ),
   }
 }
+
+/** 选择通往搜索结果的整条祖先路径。 */
+export const revealMessage = (original: Session, messageId: string): Session => {
+  const session = normalizeSession(original)
+  const byId = new Map(session.messages.map((message) => [message.id, message]))
+  let message = byId.get(messageId)
+  if (!message) {
+    return original
+  }
+  const children = new Map<string, string>()
+  while (message.parentId) {
+    children.set(message.parentId, message.id)
+    const parent = byId.get(message.parentId)
+    if (!parent || children.has(parent.parentId ?? '')) {
+      return original
+    }
+    message = parent
+  }
+  return {
+    ...session,
+    rootMessageId: message.id,
+    messages: session.messages.map((item) =>
+      children.has(item.id) ? { ...item, selectedChildId: children.get(item.id) } : item
+    ),
+  }
+}

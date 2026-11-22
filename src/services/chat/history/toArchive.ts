@@ -222,7 +222,11 @@ const numberMessages = (messages: Message[]) => {
   return { ordered, ids }
 }
 
-export const toSessionFile = (original: Session, exportImage: ExportImage): SessionFile => {
+export const toSessionFile = (
+  original: Session,
+  exportImage: ExportImage,
+  full = false
+): SessionFile => {
   const session = normalizeSession(original)
   const { ordered, ids } = numberMessages(session.messages)
   const id = (message: Message) => ids.get(message.id) ?? fail('backupInvalidBranches')
@@ -259,6 +263,13 @@ export const toSessionFile = (original: Session, exportImage: ExportImage): Sess
               latest_usage: counts ? message.usage : undefined,
               context_mode: message.contextMode,
               omitted_history_rounds: message.omittedHistoryRounds || undefined,
+              ...(full
+                ? {
+                    reply_style: message.replyStyle,
+                    notes: message.notes,
+                    usage_entries: message.usageEntries,
+                  }
+                : {}),
             },
           }
         : {}),
@@ -268,19 +279,20 @@ export const toSessionFile = (original: Session, exportImage: ExportImage): Sess
   return {
     id: session.id,
     title: session.title || null,
-    pinned: false,
+    pinned: session.pinned ?? false,
     // 格式要求非空；空会话没有消息可指向，写 0。
     current_message_id: current ? id(current) : 0,
     inserted_at: iso(session.createdAt),
     updated_at: iso(session.updatedAt),
     messages,
+    ...(full ? { moseek: { options: session.options, notes: session.notes } } : {}),
   }
 }
 
 export const toIndexEntry = (file: SessionFile): SessionIndexEntry => ({
   id: file.id,
   title: file.title,
-  pinned: false,
+  pinned: file.pinned,
   message_count: file.messages.length,
   inserted_at: file.inserted_at,
   updated_at: file.updated_at,

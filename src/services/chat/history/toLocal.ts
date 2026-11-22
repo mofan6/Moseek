@@ -20,7 +20,7 @@ import { sessionFilesDir } from './paths.js'
 export type LocalSession = {
   session: Session
   /** 本会话目录下应存在的图片：ZIP 条目名 → 文件 ID */
-  images: Map<string, string>
+  originals: Map<string, FileEntry>
 }
 
 const time = (value: string) => Date.parse(value)
@@ -223,6 +223,9 @@ const toAssistant = (message: ChatMessage): AssistantMessage => {
     prefix: false,
     tokenCounts: message.moseek?.token_counts,
     contextMode: message.moseek?.context_mode,
+    replyStyle: message.moseek?.reply_style,
+    notes: message.moseek?.notes,
+    usageEntries: message.moseek?.usage_entries,
     omittedHistoryRounds: message.moseek?.omitted_history_rounds,
     usage: message.moseek?.latest_usage,
     status: replyStatus[message.status],
@@ -276,23 +279,26 @@ const buildTree = (file: SessionFile): Pick<Session, 'messages' | 'rootMessageId
 }
 
 /** 转换单个会话，并列出本会话目录下需要从 ZIP 读取的图片。 */
-export const toLocalSession = (file: SessionFile): LocalSession => {
+export const toLocalSession = (file: SessionFile, full = false): LocalSession => {
   const session: Session = {
     id: file.id,
     // 空标题按「新对话」显示，导出时还原为 null。
     title: file.title ?? '',
     createdAt: time(file.inserted_at),
     updatedAt: time(file.updated_at),
+    pinned: file.pinned,
+    options: full ? file.moseek?.options : undefined,
+    notes: full ? file.moseek?.notes : undefined,
     ...buildTree(file),
   }
-  const images = new Map<string, string>()
+  const originals = new Map<string, FileEntry>()
   for (const message of file.messages) {
     for (const item of message.fragments) {
       if (item.type !== 'FILE') {
         continue
       }
       for (const entry of item.files) {
-        if (!entry.is_image) {
+        if (!full && !entry.is_image) {
           continue
         }
         // 读取端把条目名规范为 NFC，引用也按同样规则比较。
@@ -303,13 +309,13 @@ export const toLocalSession = (file: SessionFile): LocalSession => {
         // 图片只能在本会话目录下，同一条目不能对应不同文件。
         if (
           !path.startsWith(sessionFilesDir(file.id)) ||
-          (images.get(path) ?? entry.id) !== entry.id
+          (originals.get(path)?.id ?? entry.id) !== entry.id
         ) {
           fail('backupInvalidFiles')
         }
-        images.set(path, entry.id)
+        originals.set(path, entry)
       }
     }
   }
-  return { session, images }
+  return { session, originals }
 }

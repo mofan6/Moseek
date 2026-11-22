@@ -33,6 +33,7 @@ import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
 import { ApiBalance } from './ApiBalance.js'
+import { openWorkspace } from '../workspace/workspaceState.js'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { AppearanceSettings } from './AppearanceSettings.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
@@ -118,6 +119,16 @@ const SettingsContent = () => {
             <>
               <ImportHistory historyImport={historyImport} disabled={historyBusy} />
               <ExportHistory disabled={historyBusy} />
+              <ExportHistory disabled={historyBusy} full />
+              <SettingCell
+                label={t('localUsage')}
+                status={null}
+                action={
+                  <Button variant="outlined" size="m" onClick={() => openWorkspace('usage')}>
+                    {t('openLocalUsage')}
+                  </Button>
+                }
+              />
               <SettingCell
                 label={t('deleteAllSessions')}
                 status={null}
@@ -302,7 +313,7 @@ const LocaleSetting = () => {
   )
 }
 
-const replyStyleText: Record<ReplyStyle, [TranslationKey, TranslationKey]> = {
+export const replyStyleText: Record<ReplyStyle, [TranslationKey, TranslationKey]> = {
   concise: ['replyStyleConcise', 'replyStyleConciseDescription'],
   guided: ['replyStyleGuided', 'replyStyleGuidedDescription'],
   structured: ['replyStyleStructured', 'replyStyleStructuredDescription'],
@@ -533,7 +544,7 @@ const ImportHistory = ({
 }
 
 /** 将全部会话及图片导出为 ZIP 文件并下载 */
-const ExportHistory = ({ disabled }: { disabled: boolean }) => {
+const ExportHistory = ({ disabled, full = false }: { disabled: boolean; full?: boolean }) => {
   const t = useTranslate()
   const empty = useChatStore((state) => state.sessions.length === 0)
   const [busy, setBusy] = useState(false)
@@ -543,7 +554,7 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
     setBusy(true)
     setStatus(null)
     try {
-      const { name, blob } = await exportHistory()
+      const { name, blob } = await exportHistory(full)
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -559,14 +570,15 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
 
   return (
     <SettingCell
-      label={t('exportAllLabel')}
-      description={t('historyExportDescription')}
+      label={t(full ? 'exportFullLabel' : 'exportAllLabel')}
+      description={t(full ? 'exportFullDescription' : 'historyExportDescription')}
       status={status}
       action={
         <Button
           variant="outlined"
           size="m"
           className={styles.cellButton}
+          aria-label={full ? t('exportFullLabel') : undefined}
           disabled={disabled || busy || empty}
           onClick={() => void onExport()}
         >

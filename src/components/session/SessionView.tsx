@@ -5,6 +5,7 @@ import type { Session } from '../../services/chat/types.js'
 import { ChatInput } from '../chatInput/ChatInput.js'
 import { MessageList } from '../messages/MessageList.js'
 import { MobileHeader } from './MobileHeader.js'
+import { ConversationTools } from '../workspace/ConversationTools.js'
 import styles from './SessionView.module.css'
 
 /** 会话页：标题栏（移动端为顶栏）+ 消息列表，输入框吸底 */
@@ -21,15 +22,20 @@ export const SessionView = memo(function SessionView({
   return (
     <div className={styles.view}>
       {isMobile ? (
-        <MobileHeader title={title} />
+        <MobileHeader
+          title={title}
+          actions={<ConversationTools key={session.id} session={session} />}
+        />
       ) : (
         <div className={styles.header}>
           <div className={styles.title} data-sidebar-motion="left">
             {title}
           </div>
+          <ConversationTools key={session.id} session={session} />
         </div>
       )}
       <MessageList
+        key={session.id}
         session={session}
         streaming={streaming}
         footer={

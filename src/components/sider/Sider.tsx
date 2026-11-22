@@ -1,7 +1,12 @@
 import clsx from 'clsx'
 import { useEffect, useMemo, useState, type MouseEventHandler } from 'react'
 import { useTranslate } from '../../i18n/index.js'
-import { IconPanelLeftOutline16, IconSettingsOutline16, NewChatIcon } from '../base/icons.js'
+import {
+  IconPanelLeftOutline16,
+  IconSearchOutline16,
+  IconSettingsOutline16,
+  NewChatIcon,
+} from '../base/icons.js'
 import { groupSessions } from '../../services/chat/sessionGroups.js'
 import { newChat, removeSession, useChatStore } from '../../services/chat/store.js'
 import type { SessionSummary } from '../../services/chat/types.js'
@@ -13,6 +18,7 @@ import { showToast } from '../base/toastState.js'
 import { openSettings } from '../settings/settingsDialogState.js'
 import { closeMobileSider, useMobileSider } from './mobileSiderState.js'
 import { SessionItem } from './SessionItem.js'
+import { openWorkspace } from '../workspace/workspaceState.js'
 import styles from './Sider.module.css'
 
 export const DESKTOP_SIDER_ID = 'moseek-desktop-sidebar'
@@ -31,7 +37,17 @@ export const Sider = ({
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
   const [now, setNow] = useState(Date.now)
-  const groups = useMemo(() => groupSessions(sessions, now, t), [sessions, now, t])
+  const groups = useMemo(() => {
+    const pinned = sessions.filter((session) => session.pinned)
+    const dated = groupSessions(
+      sessions.filter((session) => !session.pinned),
+      now,
+      t
+    )
+    return pinned.length
+      ? [{ key: 'pinned', label: t('pinnedChats'), sessions: pinned }, ...dated]
+      : dated
+  }, [sessions, now, t])
   const [deleting, setDeleting] = useState<SessionSummary | null>(null)
   const [deletePending, setDeletePending] = useState(false)
 
@@ -71,6 +87,16 @@ export const Sider = ({
           {mobile ? <img src="./favicon.svg" alt="" width={28} height={28} /> : null}
           {t('appName')}
         </div>
+        <IconButton
+          icon={<IconSearchOutline16 />}
+          size="m"
+          tooltip={t('historySearch')}
+          tooltipPlacement="bottom"
+          onClick={() => {
+            closeMobileSider()
+            openWorkspace('search')
+          }}
+        />
         <IconButton
           size="m"
           icon={<IconPanelLeftOutline16 />}

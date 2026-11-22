@@ -1,19 +1,34 @@
 import { create } from 'zustand'
 import { showToast } from '../../components/base/toastState.js'
+import { translate } from '../../i18n/index.js'
 import { createId } from '../../utils/id.js'
 import { ApiError, streamMessage } from '../api/client.js'
+import { StreamReadError } from '../api/sse.js'
 import { DEFAULT_MODEL } from '../api/models.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
-import { REPLY_STYLES, useSettings } from '../settings.js'
-import { appendBranch, getVisibleMessages, normalizeSession, selectVersion } from './branches.js'
+import {
+  getConversationDefaults,
+  REPLY_STYLES,
+  useSettings,
+  type ConversationOptions,
+} from '../settings.js'
+import {
+  appendBranch,
+  getVisibleMessages,
+  normalizeSession,
+  revealMessage,
+  selectVersion,
+} from './branches.js'
 import * as db from './db.js'
 import {
   clearAllDrafts,
   clearDraft,
   clearSentDraft,
   getDraft,
+  moveDraft,
   prepareDraftMessage,
+  restoreDrafts,
 } from './drafts.js'
 import { createLatestReminder } from './latestReminder.js'
 import {
@@ -39,6 +54,7 @@ import {
   type UserMessage,
 } from './types.js'
 import { addTokenCounts, getReplyTokenCounts, toTokenCounts } from './usage.js'
+import { checkTokenBudget } from './usageHistory.js'
 
 /** 保留最近打开的详情；当前会话、生成中及尚未成功保存的会话不淘汰。 */
 const SESSION_CACHE_LIMIT = 5
@@ -64,6 +80,7 @@ type ChatState = {
   sessionSaveErrors: Record<string, boolean>
   /** null 表示新对话（欢迎页） */
   activeId: string | null
+  messageJump?: { sessionId: string; messageId: string }
   /** 正在生成回复的会话 */
   streaming: Record<string, AbortController>
 }
@@ -96,12 +113,18 @@ const getStreamController = (id: string) => {
 }
 
 const sameSummary = (a: SessionSummary, b: SessionSummary) =>
-  a.title === b.title && a.createdAt === b.createdAt && a.updatedAt === b.updatedAt
+  a.title === b.title &&
+  a.createdAt === b.createdAt &&
+  a.updatedAt === b.updatedAt &&
+  !!a.pinned === !!b.pinned
 
 const sessionAccess = new Map<string, number>()
 const unsavedSessions = new Set<string>()
 /** 保存失败时保留原件，重试成功后才释放。 */
 const pendingFiles = new Map<string, db.StoredFile[]>()
+const writeBases = new Map<string, db.SessionWriteBase>()
+const writeQueues = new Map<string, Promise<void>>()
+const recoveredOriginals = new Map<string, SessionSummary>()
 const deletingSessions = new Set<string>()
 const deletionTasks = new Set<Promise<boolean>>()
 const streamFlushes = new Map<string, () => void>()
@@ -172,7 +195,7 @@ const updateReply = (sessionId: string, reply: AssistantMessage) =>
     ),
   }))
 
-const persist = (sessionId: string) => {
+const persist = (sessionId: string, checkBudget = false) => {
   const session = getSession(sessionId)
   if (session) {
     unsavedSessions.add(sessionId)
@@ -181,17 +204,61 @@ const persist = (sessionId: string) => {
     }
     const epoch = historyEpoch
     const files = pendingFiles.get(sessionId)
-    void db
-      .saveSession(session, files)
-      .then(() => {
+    const previous = writeQueues.get(sessionId) ?? Promise.resolve()
+    const task = previous
+      .then(async () => {
+        if (epoch !== historyEpoch || !getSession(sessionId) || deletingSessions.has(sessionId)) {
+          return
+        }
+        const { saved, original } = await db.saveSession(
+          session,
+          files ?? [],
+          writeBases.get(sessionId),
+          translate('recoveredSessionTitle', { title: session.title || translate('untitledChat') })
+        )
         if (epoch !== historyEpoch || !getSession(sessionId)) {
           return
+        }
+        writeBases.set(sessionId, { id: saved.id, revision: saved.revision })
+        if (checkBudget) {
+          void checkTokenBudget()
+        }
+        if (original?.id === sessionId) {
+          recoveredOriginals.set(sessionId, original)
         }
         if (pendingFiles.get(sessionId) === files) {
           pendingFiles.delete(sessionId)
         }
         if (getSession(sessionId) === session) {
           unsavedSessions.delete(sessionId)
+          if (
+            saved.id !== sessionId &&
+            !getStreamController(sessionId) &&
+            !deletingSessions.has(sessionId)
+          ) {
+            const originalSummary = recoveredOriginals.get(sessionId)
+            recoveredOriginals.delete(sessionId)
+            writeBases.delete(sessionId)
+            writeBases.set(saved.id, { id: saved.id, revision: saved.revision })
+            sessionAccess.delete(sessionId)
+            touchSession(saved.id)
+            moveDraft(sessionId, saved.id)
+            set((state) => {
+              const cache = Object.fromEntries(
+                Object.entries(state.sessionCache).filter(([id]) => id !== sessionId)
+              )
+              return {
+                activeId: state.activeId === sessionId ? saved.id : state.activeId,
+                sessionCache: { ...cache, [saved.id]: saved },
+                sessions: sortSessions([
+                  ...state.sessions.filter((item) => item.id !== sessionId),
+                  ...(originalSummary ? [originalSummary] : []),
+                  toSessionSummary(saved),
+                ]),
+              }
+            })
+            showToast({ key: 'sessionWriteConflict' })
+          }
           set((state) => ({
             sessionSaveErrors: Object.fromEntries(
               Object.entries(state.sessionSaveErrors).filter(([id]) => id !== sessionId)
@@ -208,13 +275,23 @@ const persist = (sessionId: string) => {
           }))
         }
       })
+      .finally(() => {
+        if (writeQueues.get(sessionId) === task) {
+          writeQueues.delete(sessionId)
+        }
+      })
+    writeQueues.set(sessionId, task)
   }
 }
 
 export const retrySaveSessions = () => {
   if (!get().importingHistory) {
-    unsavedSessions.forEach(persist)
+    unsavedSessions.forEach((id) => persist(id))
   }
+}
+
+export const waitForHistoryWrites = async () => {
+  await Promise.all(writeQueues.values())
 }
 
 /** 离开前先合并尚未绘制的增量；隐藏期间浏览器可能暂停动画帧。 */
@@ -247,8 +324,11 @@ export const bindChatPersistence = () => {
 }
 
 /** 每条回复保留发送时的请求设置。 */
-const createReply = (): AssistantMessage => {
-  const { model, reasoning, search, contextMode, replyStyle } = useSettings.getState()
+const createReply = (session: Session, singleTurn = false): AssistantMessage => {
+  const { model, reasoning, search, contextMode, replyStyle } = {
+    ...getConversationDefaults(),
+    ...session.options,
+  }
   return {
     id: createId(),
     role: 'assistant',
@@ -257,16 +337,20 @@ const createReply = (): AssistantMessage => {
     thinking: reasoning !== 'off',
     reasoning,
     search: model === 'deepseek-flash' && search,
-    contextMode,
+    contextMode: singleTurn ? 'single' : contextMode,
     replyStyle,
+    notes: singleTurn || contextMode === 'single' ? undefined : session.notes,
     prefix: true,
     status: 'pending',
     blocks: [],
   }
 }
 
-const canSendImages = (files: readonly { isImage: boolean }[]): boolean => {
-  if (useSettings.getState().model === 'deepseek-v4-pro' && files.some((file) => file.isImage)) {
+const canSendImages = (
+  files: readonly { isImage: boolean }[],
+  model: ConversationOptions['model']
+): boolean => {
+  if (model === 'deepseek-v4-pro' && files.some((file) => file.isImage)) {
     showToast({ key: 'imagesRequireFlash', type: 'error' })
     return false
   }
@@ -303,7 +387,7 @@ export const initChat = (): Promise<void> => {
   set({ initError: false })
   initTask = (async () => {
     try {
-      const summaries = await db.loadSessionSummaries()
+      const [summaries] = await Promise.all([db.loadSessionSummaries(), restoreDrafts()])
       if (epoch === historyEpoch) {
         set({ ready: true, sessions: sortSessions(summaries) })
       }
@@ -348,13 +432,16 @@ const ensureSessionLoaded = (id: string): Promise<void> => {
         throw new Error(`Session ${id} is missing from local storage`)
       }
       const settled = settleInterrupted(normalizeSession(stored))
-      // 读取期间可能已在列表重命名，保留最新元数据，不能让旧读取覆盖它。
-      const session = sameSummary(settled, summary) ? settled : { ...settled, ...summary }
+      writeBases.set(id, { id, revision: stored.revision })
       touchSession(id)
-      set((state) => ({ sessionCache: { ...state.sessionCache, [id]: session } }))
-      if (session !== stored) {
-        persist(id)
-      }
+      set((state) => ({
+        sessionCache: { ...state.sessionCache, [id]: settled },
+        sessions: sameSummary(settled, summary)
+          ? state.sessions
+          : sortSessions(
+              state.sessions.map((item) => (item.id === id ? toSessionSummary(settled) : item))
+            ),
+      }))
       trimSessionCache()
     } catch (error) {
       if (epoch === historyEpoch && sessionLoads.get(id) === load) {
@@ -408,6 +495,7 @@ export const replaceHistory = async (write: () => Promise<void>): Promise<number
     initTask = undefined
     sessionLoads.clear()
     await waitForIdle()
+    await waitForHistoryWrites()
     await db.clearStaging()
     let summaries: SessionSummary[]
     try {
@@ -418,6 +506,8 @@ export const replaceHistory = async (write: () => Promise<void>): Promise<number
       throw error
     }
     sessionAccess.clear()
+    writeBases.clear()
+    recoveredOriginals.clear()
     unsavedSessions.clear()
     pendingFiles.clear()
     clearAllDrafts()
@@ -429,6 +519,7 @@ export const replaceHistory = async (write: () => Promise<void>): Promise<number
       sessionLoadErrors: {},
       sessionSaveErrors: {},
       activeId: null,
+      messageJump: undefined,
     })
     return summaries.length
   } finally {
@@ -457,6 +548,58 @@ export const selectSession = (id: string) => {
     set({ activeId: id })
     void ensureSessionLoaded(id)
     trimSessionCache()
+  }
+}
+
+export const openHistoryMessage = async (sessionId: string, messageId?: string) => {
+  selectSession(sessionId)
+  if (!messageId || get().activeId !== sessionId) {
+    return
+  }
+  await ensureSessionLoaded(sessionId)
+  const session = getSession(sessionId)
+  if (!session || get().activeId !== sessionId || get().importingHistory) {
+    return
+  }
+  if (!getVisibleMessages(session).some((message) => message.id === messageId)) {
+    if (getStreamController(sessionId)) {
+      showToast({ key: 'historyJumpBusy' })
+      return
+    }
+    updateSession(sessionId, (current) => revealMessage(current, messageId))
+    persist(sessionId)
+  }
+  set({ messageJump: { sessionId, messageId } })
+}
+
+export const consumeMessageJump = (jump: NonNullable<ChatState['messageJump']>) => {
+  if (get().messageJump === jump) {
+    set({ messageJump: undefined })
+  }
+}
+
+export const setConversationOptions = (id: string, options: Partial<ConversationOptions>) => {
+  if (!get().importingHistory && !deletingSessions.has(id)) {
+    updateSession(id, (session) => ({
+      ...session,
+      options: { ...session.options, ...options },
+    }))
+    persist(id)
+  }
+}
+
+export const setSessionNotes = (id: string, notes: string) => {
+  if (!get().importingHistory && !deletingSessions.has(id)) {
+    updateSession(id, (session) => ({ ...session, notes: notes.trim().slice(0, 800) || undefined }))
+    persist(id)
+  }
+}
+
+export const toggleSessionPin = async (id: string) => {
+  await ensureSessionLoaded(id)
+  if (!get().importingHistory && !deletingSessions.has(id)) {
+    updateSession(id, (session) => ({ ...session, pinned: !session.pinned }))
+    persist(id)
   }
 }
 
@@ -501,20 +644,28 @@ const removeSessionData = async (id: string): Promise<boolean> => {
     getStreamController(id)?.abort()
     // 等本会话的流收尾，避免删除之后又被收尾保存写回来。
     await waitForIdle(id)
+    await writeQueues.get(id)
     if (epoch !== historyEpoch) {
       return false
     }
-    await db.deleteSession(id)
+    const storedId = writeBases.get(id)?.id ?? id
+    await db.deleteSession(storedId)
     if (epoch !== historyEpoch) {
       return true
     }
     sessionLoads.delete(id)
+    writeBases.delete(id)
+    const originalSummary = recoveredOriginals.get(id)
+    recoveredOriginals.delete(id)
     sessionAccess.delete(id)
     unsavedSessions.delete(id)
     pendingFiles.delete(id)
     clearDraft(id)
     set((state) => ({
-      sessions: state.sessions.filter((session) => session.id !== id),
+      sessions: sortSessions([
+        ...state.sessions.filter((session) => session.id !== id),
+        ...(storedId !== id && originalSummary ? [originalSummary] : []),
+      ]),
       sessionCache: Object.fromEntries(
         Object.entries(state.sessionCache).filter(([key]) => key !== id)
       ),
@@ -549,7 +700,7 @@ export const stopReply = (sessionId: string) => getStreamController(sessionId)?.
  * 提交指定会话的最新草稿；null 表示新建会话。
  * 同步接收成功才清空草稿，附件原件由会话接管；保存失败仍通过保存入口重试。
  */
-export const sendMessage = (targetSessionId: string | null) => {
+export const sendMessage = (targetSessionId: string | null, singleTurn = false) => {
   if (get().importingHistory || !get().ready) {
     return false
   }
@@ -558,7 +709,11 @@ export const sendMessage = (targetSessionId: string | null) => {
     return false
   }
   const { text, files } = prepared
-  if (!canSendImages(files)) {
+  const { model, reasoning, search } = {
+    ...getConversationDefaults(),
+    ...(targetSessionId ? getSession(targetSessionId)?.options : undefined),
+  }
+  if (!canSendImages(files, model)) {
     return false
   }
   const now = Date.now()
@@ -577,6 +732,7 @@ export const sendMessage = (targetSessionId: string | null) => {
       updatedAt: now,
       messages: [],
       rootMessageId: null,
+      options: { model, reasoning, search },
     }
     sessionId = session.id
     touchSession(session.id)
@@ -605,7 +761,7 @@ export const sendMessage = (targetSessionId: string | null) => {
     })),
     createdAt: now,
   }
-  const reply = createReply()
+  const reply = createReply(current, singleTurn)
   updateSession(sessionId, (session) => ({
     ...appendBranch(session, history.at(-1)?.id ?? null, [question, reply]),
     updatedAt: now,
@@ -638,11 +794,11 @@ export const regenerateReply = (sessionId: string, messageId?: string) => {
   if (question?.role !== 'user' || path[index]?.role !== 'assistant') {
     return
   }
-  if (!canSendImages(question.files)) {
+  if (!canSendImages(question.files, session.options?.model ?? getConversationDefaults().model)) {
     return
   }
   const history = path.slice(0, index - 1)
-  const reply = createReply()
+  const reply = createReply(session)
   updateSession(sessionId, (s) => ({
     ...appendBranch(s, question.id, [reply]),
     updatedAt: Date.now(),
@@ -667,7 +823,7 @@ export const editMessage = (sessionId: string, messageId: string, content: strin
   if (previous?.role !== 'user' || (!text && previous.files.length === 0)) {
     return false
   }
-  if (!canSendImages(previous.files)) {
+  if (!canSendImages(previous.files, session.options?.model ?? getConversationDefaults().model)) {
     return false
   }
   const question: UserMessage = {
@@ -677,7 +833,7 @@ export const editMessage = (sessionId: string, messageId: string, content: strin
     files: previous.files,
     createdAt: Date.now(),
   }
-  const reply = createReply()
+  const reply = createReply(session)
   updateSession(sessionId, (s) => ({
     ...appendBranch(s, path[index - 1]?.id ?? null, [question, reply]),
     updatedAt: Date.now(),
@@ -718,7 +874,7 @@ export const continueReply = (sessionId: string, messageId: string) => {
   ) {
     return
   }
-  const settings = useSettings.getState()
+  const settings = { ...getConversationDefaults(), ...session.options }
   const model = previous.model ?? settings.model
   const reasoning =
     previous.reasoning ??
@@ -983,9 +1139,7 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
   const system = getSystemPrompt(replyStyle)
   const { history, omittedHistoryRounds } = selectRequestHistory(original.history, contextMode)
   const request = { ...original, history }
-  const tools = supportsWebTools
-    ? getServerTools(request.question, initial.search ?? false)
-    : []
+  const tools = supportsWebTools ? getServerTools(request.question, initial.search ?? false) : []
   const controller = new AbortController()
   if (!getSession(sessionId)?.title) {
     titleRequests.add(controller)
@@ -1006,6 +1160,10 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
       let preparing = true
       let receivedContent = false
       const previousCounts = reply.tokenCounts
+      const previousEntries =
+        reply.usageEntries ??
+        (previousCounts ? [{ at: reply.createdAt, counts: previousCounts }] : [])
+      const requestTime = Date.now()
       try {
         const prepared = await prepareFiles(sessionId, request, controller.signal)
         preparing = false
@@ -1024,6 +1182,24 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
           latestReminder,
           supportsWebTools && contextMode === 'full'
         )
+        if (initial.notes && contextMode !== 'single') {
+          const questionIndex = messages.findLastIndex((message) => message.role === 'user')
+          const question = messages[questionIndex]
+          if (question?.role === 'user') {
+            const text = `本会话的背景笔记（用于理解当前问题）：\n${initial.notes}\n\n当前消息：\n`
+            const content =
+              typeof question.content === 'string'
+                ? text + question.content
+                : [
+                    ...question.content.filter((block) => block.type !== 'text'),
+                    {
+                      type: 'text' as const,
+                      text: text + prepared.question.content,
+                    },
+                  ]
+            messages[questionIndex] = { ...question, content }
+          }
+        }
         const events = streamMessage(
           useSettings.getState().apiKey ?? '',
           {
@@ -1057,10 +1233,12 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
           reply = applyEvent(reply, event, Date.now(), blockIndexes)
           if (event.type === 'message_delta' && event.usage) {
             // 本次流的最终用量为累计值。续写只加到此前已保存的用量上。
+            const counts = toTokenCounts(event.usage)
             reply = {
               ...reply,
               usage: event.usage,
-              tokenCounts: addTokenCounts(previousCounts, toTokenCounts(event.usage)),
+              tokenCounts: addTokenCounts(previousCounts, counts),
+              usageEntries: [...previousEntries, { at: requestTime, counts }],
             }
           }
           if (document.visibilityState === 'hidden') {
@@ -1107,9 +1285,15 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
           /\bContent Exists Risk\b/i.test(error.message)
         ) {
           reply = settleReply({ ...reply, stopReason: 'refusal' }, 'done', Date.now())
-        } else if (error instanceof ApiError && error.kind === 'interrupted' && reply.stopReason) {
+        } else if (
+          (error instanceof StreamReadError ||
+            (error instanceof ApiError && error.kind === 'interrupted')) &&
+          reply.stopReason
+        ) {
           // 已收到 message_delta 的结束原因，只是缺了结尾的 message_stop
           reply = settleReply(reply, 'done', Date.now())
+        } else if (error instanceof StreamReadError) {
+          reply = settleReply(reply, 'error', Date.now(), { kind: 'interrupted', message: '' })
         } else if (error instanceof ApiError) {
           reply = settleReply(reply, 'error', Date.now(), {
             kind: error.kind,
@@ -1136,6 +1320,6 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, origina
         Object.entries(state.streaming).filter(([id]) => id !== sessionId)
       ),
     }))
-    persist(sessionId)
+    persist(sessionId, reply.usageEntries !== initial.usageEntries)
   }
 }

@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { memo, useCallback, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import {
   IconGlobeLanguageOutline14,
   IconPaperclipOutline16,
@@ -10,7 +10,12 @@ import { MODEL_NAMES, REASONING_LABELS, REASONING_LEVELS } from '../../services/
 import type { ChatModel } from '../../services/api/types.js'
 import { setModel, setReasoning, setSearch, useSettings } from '../../services/settings.js'
 import { useIsMobile } from '../../app/viewport.js'
-import { sendMessage, stopReply, useChatStore } from '../../services/chat/store.js'
+import {
+  sendMessage,
+  setConversationOptions,
+  stopReply,
+  useChatStore,
+} from '../../services/chat/store.js'
 import {
   addDraftFiles,
   EMPTY_DRAFT,
@@ -62,12 +67,19 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const streaming = useChatStore(
     (state) => sessionId !== null && Object.hasOwn(state.streaming, sessionId)
   )
-  const model = useSettings((state) => state.model)
-  const reasoning = useSettings((state) => state.reasoning)
+  const options = useChatStore((state) =>
+    sessionId ? state.sessionCache[sessionId]?.options : undefined
+  )
+  const defaultModel = useSettings((state) => state.model)
+  const defaultReasoning = useSettings((state) => state.reasoning)
+  const defaultSearch = useSettings((state) => state.search)
+  const model = options?.model ?? defaultModel
+  const reasoning = options?.reasoning ?? defaultReasoning
   const supportsSearch = model === 'deepseek-flash'
   const importingHistory = useChatStore((state) => state.importingHistory)
   const isMobile = useIsMobile()
-  const search = useSettings((state) => state.search)
+  const search = options?.search ?? defaultSearch
+  const [singleTurn, setSingleTurn] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -138,9 +150,10 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
       return
     }
     // 文本与上传完成态由提交动作读取最新快照，不使用上一次渲染的草稿。
-    if (!ensureApiKey() || !sendMessage(sessionId)) {
+    if (!ensureApiKey() || !sendMessage(sessionId, singleTurn)) {
       return
     }
+    setSingleTurn(false)
     stopReadAloud()
     if (isMobile) {
       textareaRef.current?.blur()
@@ -150,145 +163,174 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   }
 
   return (
-    <div
-      className={clsx(styles.wrapper, sessionId === null ? styles.home : styles.session)}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          textareaRef.current?.focus({ preventScroll: true })
-        }
-      }}
-    >
-      <DraftAttachments items={attachments} onRetry={retryFile} onRemove={removeFile} />
-      <div className={styles.textareaWrapper}>
-        <textarea
-          ref={textareaRef}
-          className={clsx(styles.textarea, recording && isMobile && styles.textareaHidden)}
-          placeholder={t('chatInputPlaceholderChat')}
-          rows={2}
-          // 移动端不自动聚焦，避免一打开就弹出键盘
-          autoFocus={!isMobile}
-          disabled={importingHistory}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onMouseDown={(event) => {
-            // 首次点击时手动聚焦，避免 Safari 把整个页面滚到输入框位置。
-            if (isMobile && event.button === 0 && document.activeElement !== event.currentTarget) {
-              event.preventDefault()
-              event.currentTarget.focus({ preventScroll: true })
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-              event.preventDefault()
-              send()
-            }
-          }}
-          onPaste={(event) => {
-            const files = Array.from(event.clipboardData.files)
-            if (files.length > 0) {
-              event.preventDefault()
-              acceptFiles(files)
-            }
-          }}
-        />
-        {recording && isMobile ? <Spectrum getAnalyser={voice.getAnalyser} /> : null}
-        <div className={styles.mirror} aria-hidden>
-          {`${text}\n`}
+    <>
+      {sessionId !== null ? (
+        <div className={styles.requestOptions}>
+          <button
+            type="button"
+            aria-pressed={singleTurn}
+            disabled={streaming || importingHistory}
+            className={styles.singleTurn}
+            onClick={() => setSingleTurn(!singleTurn)}
+          >
+            {t('singleTurnAction')}
+          </button>
         </div>
-      </div>
-      <div className={styles.functionRow}>
-        <div className={styles.modelOptions}>
-          <Select
-            value={model}
-            options={modelOptions}
-            ariaLabel={t('chatModel')}
-            className={styles.modelSelect}
-            onChange={setModel}
-          />
-          <Select
-            value={reasoning}
-            options={reasoningOptions}
-            ariaLabel={t('reasoningLevel')}
-            className={styles.reasoningSelect}
-            onChange={setReasoning}
-          />
-          <Tooltip content={t(supportsSearch ? 'deactivatedSearchTooltip' : 'flashFeatures')}>
-            <button
-              type="button"
-              className={clsx(styles.toggle, supportsSearch && search && styles.selected)}
-              aria-label={t('search')}
-              aria-pressed={supportsSearch && search}
-              disabled={!supportsSearch}
-              onClick={() => setSearch(!search)}
-            >
-              <IconGlobeLanguageOutline14 />
-              <span className={styles.toggleLabel}>
-                <span className={styles.fullSearchLabel}>{t('search')}</span>
-                <span className={styles.shortSearchLabel}>{t('shortSearch')}</span>
-              </span>
-            </button>
-          </Tooltip>
-        </div>
-        <div className={styles.right}>
-          <VoiceButton
-            status={voice.status}
-            disabled={!voice.available}
-            seconds={voice.seconds}
-            onClick={() => {
+      ) : null}
+      <div
+        className={clsx(styles.wrapper, sessionId === null ? styles.home : styles.session)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            textareaRef.current?.focus({ preventScroll: true })
+          }
+        }}
+      >
+        <DraftAttachments items={attachments} onRetry={retryFile} onRemove={removeFile} />
+        <div className={styles.textareaWrapper}>
+          <textarea
+            ref={textareaRef}
+            className={clsx(styles.textarea, recording && isMobile && styles.textareaHidden)}
+            placeholder={t('chatInputPlaceholderChat')}
+            rows={2}
+            // 移动端不自动聚焦，避免一打开就弹出键盘
+            autoFocus={!isMobile}
+            disabled={importingHistory}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            onMouseDown={(event) => {
+              // 首次点击时手动聚焦，避免 Safari 把整个页面滚到输入框位置。
               if (
-                voice.status !== 'idle' ||
-                (!useChatStore.getState().importingHistory && ensureApiKey())
+                isMobile &&
+                event.button === 0 &&
+                document.activeElement !== event.currentTarget
               ) {
-                void voice.toggle()
+                event.preventDefault()
+                event.currentTarget.focus({ preventScroll: true })
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                event.preventDefault()
+                send()
+              }
+            }}
+            onPaste={(event) => {
+              const files = Array.from(event.clipboardData.files)
+              if (files.length > 0) {
+                event.preventDefault()
+                acceptFiles(files)
               }
             }}
           />
-          <IconButton
-            size="m"
-            tone="primary"
-            icon={<IconPaperclipOutline16 />}
-            tooltip={t('uploadFile')}
-            disabled={importingHistory}
-            onClick={() => ensureApiKey() && fileInputRef.current?.click()}
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            hidden
-            accept={ACCEPT}
-            onChange={(event) => {
-              acceptFiles(Array.from(event.target.files ?? []))
-              event.target.value = ''
-            }}
-          />
-          {streaming && sessionId ? (
-            <button
-              type="button"
-              className={styles.sendButton}
-              aria-label={t('chatInputStopButtonTooltip')}
-              onClick={() => {
-                stopReadAloud()
-                stopReply(sessionId)
-              }}
-            >
-              <IconStopFill16 />
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={clsx(styles.sendButton, !canSend && styles.disabled)}
-              aria-label={t('send')}
-              aria-disabled={!canSend}
-              onClick={send}
-            >
-              <IconSendOutline16 />
-            </button>
-          )}
+          {recording && isMobile ? <Spectrum getAnalyser={voice.getAnalyser} /> : null}
+          <div className={styles.mirror} aria-hidden>
+            {`${text}\n`}
+          </div>
         </div>
+        <div className={styles.functionRow}>
+          <div className={styles.modelOptions}>
+            <Select
+              value={model}
+              options={modelOptions}
+              ariaLabel={t('chatModel')}
+              className={styles.modelSelect}
+              onChange={(value) =>
+                sessionId ? setConversationOptions(sessionId, { model: value }) : setModel(value)
+              }
+            />
+            <Select
+              value={reasoning}
+              options={reasoningOptions}
+              ariaLabel={t('reasoningLevel')}
+              className={styles.reasoningSelect}
+              onChange={(value) =>
+                sessionId
+                  ? setConversationOptions(sessionId, { reasoning: value })
+                  : setReasoning(value)
+              }
+            />
+            <Tooltip content={t(supportsSearch ? 'deactivatedSearchTooltip' : 'flashFeatures')}>
+              <button
+                type="button"
+                className={clsx(styles.toggle, supportsSearch && search && styles.selected)}
+                aria-label={t('search')}
+                aria-pressed={supportsSearch && search}
+                disabled={!supportsSearch}
+                onClick={() =>
+                  sessionId
+                    ? setConversationOptions(sessionId, { search: !search })
+                    : setSearch(!search)
+                }
+              >
+                <IconGlobeLanguageOutline14 />
+                <span className={styles.toggleLabel}>
+                  <span className={styles.fullSearchLabel}>{t('search')}</span>
+                  <span className={styles.shortSearchLabel}>{t('shortSearch')}</span>
+                </span>
+              </button>
+            </Tooltip>
+          </div>
+          <div className={styles.right}>
+            <VoiceButton
+              status={voice.status}
+              disabled={!voice.available}
+              seconds={voice.seconds}
+              onClick={() => {
+                if (
+                  voice.status !== 'idle' ||
+                  (!useChatStore.getState().importingHistory && ensureApiKey())
+                ) {
+                  void voice.toggle()
+                }
+              }}
+            />
+            <IconButton
+              size="m"
+              tone="primary"
+              icon={<IconPaperclipOutline16 />}
+              tooltip={t('uploadFile')}
+              disabled={importingHistory}
+              onClick={() => ensureApiKey() && fileInputRef.current?.click()}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              hidden
+              accept={ACCEPT}
+              onChange={(event) => {
+                acceptFiles(Array.from(event.target.files ?? []))
+                event.target.value = ''
+              }}
+            />
+            {streaming && sessionId ? (
+              <button
+                type="button"
+                className={styles.sendButton}
+                aria-label={t('chatInputStopButtonTooltip')}
+                onClick={() => {
+                  stopReadAloud()
+                  stopReply(sessionId)
+                }}
+              >
+                <IconStopFill16 />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={clsx(styles.sendButton, !canSend && styles.disabled)}
+                aria-label={t('send')}
+                aria-disabled={!canSend}
+                onClick={send}
+              >
+                <IconSendOutline16 />
+              </button>
+            )}
+          </div>
+        </div>
+        {!supportsSearch ? <div className={styles.modelNote}>{t('flashFeatures')}</div> : null}
+        {dragging ? <DragMask /> : null}
       </div>
-      {!supportsSearch ? <div className={styles.modelNote}>{t('flashFeatures')}</div> : null}
-      {dragging ? <DragMask /> : null}
-    </div>
+    </>
   )
 }

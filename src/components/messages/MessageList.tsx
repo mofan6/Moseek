@@ -5,12 +5,17 @@ import {
   getVisibleMessages,
   type MessageVersions,
 } from '../../services/chat/branches.js'
-import { selectMessageVersion } from '../../services/chat/store.js'
+import {
+  consumeMessageJump,
+  selectMessageVersion,
+  useChatStore,
+} from '../../services/chat/store.js'
 import type { Session } from '../../services/chat/types.js'
 import { closeSearchPanel } from '../search/searchPanelState.js'
 import { AssistantMessage } from './AssistantMessage.js'
 import { MessageScrollContext } from './scrollContext.js'
 import { UserMessage } from './UserMessage.js'
+import { Button } from '../base/Button.js'
 import type { Message } from '../../services/chat/types.js'
 import styles from './MessageList.module.css'
 
@@ -31,6 +36,7 @@ const getUploadRetryId = (messages: Message[], streaming: boolean) => {
 const STICKY_THRESHOLD = 40
 const ANSWER_TOP_GAP = 12
 const EMPTY_VERSIONS: MessageVersions = { ids: [], index: -1 }
+const MESSAGE_PAGE = 60
 
 export const MessageList = ({
   session,
@@ -49,7 +55,34 @@ export const MessageList = ({
   const streamHadAnswer = useRef<boolean | null>(null)
   const answerAnchor = useRef<{ element: HTMLElement; initialScrollTop: number } | null>(null)
   const restoreScrollRef = useRef<{ messageId: string; top: number } | null>(null)
+  const previousPath = useRef<{ sessionId: string; endId?: string } | null>(null)
   const messages = getVisibleMessages(session)
+  const jump = useChatStore((state) =>
+    state.messageJump?.sessionId === session.id ? state.messageJump : undefined
+  )
+  const [olderPage, setOlderPage] = useState<number | null>(null)
+  const [lastStreaming, setLastStreaming] = useState(streaming)
+  if (streaming !== lastStreaming) {
+    setLastStreaming(streaming)
+    if (streaming) {
+      setOlderPage(null)
+    }
+  }
+  const latestStart = Math.max(0, messages.length - MESSAGE_PAGE)
+  const jumpIndex = jump ? messages.findIndex((message) => message.id === jump.messageId) : -1
+  const restoreIndex = restoreScrollRef.current
+    ? messages.findIndex((message) => message.id === restoreScrollRef.current?.messageId)
+    : -1
+  const currentStart = Math.min(olderPage ?? latestStart, latestStart)
+  const position =
+    jumpIndex >= 0
+      ? jumpIndex
+      : restoreIndex < currentStart || restoreIndex >= currentStart + MESSAGE_PAGE
+        ? restoreIndex
+        : -1
+  const start = position >= 0 ? Math.max(0, Math.min(position - 5, latestStart)) : currentStart
+  const end = Math.min(start + MESSAGE_PAGE, messages.length)
+  const viewed = messages.slice(start, end)
   const [previousVersions, setPreviousVersions] = useState(() =>
     buildMessageVersions(session, new Map())
   )
@@ -69,6 +102,19 @@ export const MessageList = ({
       scrollTopRef.current = el.scrollTop
     }
   }, [])
+
+  const turnPage = (page: number | null, bottom = false) => {
+    clearAnswerAnchor()
+    scrollMode.current = page === null ? 'tail' : 'manual'
+    setOlderPage(page)
+    requestAnimationFrame(() => {
+      const scroll = scrollRef.current
+      if (scroll) {
+        scroll.scrollTop = page === null || bottom ? scroll.scrollHeight : 0
+        scrollTopRef.current = scroll.scrollTop
+      }
+    })
+  }
 
   const pauseFollowing = useCallback(() => {
     if (scrollMode.current === 'tail') {
@@ -115,6 +161,10 @@ export const MessageList = ({
 
   // 切换版本后将选择器留在原位置，避免回答长短变化导致操作区跳出视口。
   useLayoutEffect(() => {
+    if (previousPath.current?.sessionId === session.id && previousPath.current.endId === lastMessageId) {
+      return
+    }
+    previousPath.current = { sessionId: session.id, endId: lastMessageId }
     const anchor = restoreScrollRef.current
     const scroll = scrollRef.current
     clearAnswerAnchor()
@@ -126,13 +176,14 @@ export const MessageList = ({
       if (switcher) {
         scroll.scrollTop += switcher.getBoundingClientRect().top - anchor.top
       }
+      setOlderPage(start === latestStart ? null : start)
       scrollTopRef.current = scroll.scrollTop
       restoreScrollRef.current = null
       return
     }
     scrollMode.current = 'tail'
     scrollToBottom()
-  }, [session.id, lastMessageId, clearAnswerAnchor, scrollToBottom])
+  }, [session.id, lastMessageId, clearAnswerAnchor, scrollToBottom, start, latestStart])
 
   useLayoutEffect(() => {
     const scroll = scrollRef.current
@@ -172,6 +223,25 @@ export const MessageList = ({
   }, [lastMessage, streaming, clearAnswerAnchor, reserveAnswerSpace, scrollToBottom])
 
   useEffect(closeSearchPanel, [session.id, lastMessageId])
+
+  useLayoutEffect(() => {
+    if (jump) {
+      const scroll = scrollRef.current
+      const node = scroll?.querySelector<HTMLElement>(
+        `[data-history-message="${CSS.escape(jump.messageId)}"]`
+      )
+      if (scroll && node) {
+        clearAnswerAnchor()
+        scrollMode.current = 'manual'
+        scroll.scrollTop +=
+          node.getBoundingClientRect().top - scroll.getBoundingClientRect().top - ANSWER_TOP_GAP
+        scrollTopRef.current = scroll.scrollTop
+        setOlderPage(start === latestStart ? null : start)
+        node.focus({ preventScroll: true })
+      }
+      consumeMessageJump(jump)
+    }
+  }, [jump, start, latestStart, clearAnswerAnchor])
 
   const selectVersion = useCallback(
     (messageId: string, anchorTop: number) => {
@@ -218,32 +288,60 @@ export const MessageList = ({
           aria-label={t('conversationMessages')}
         >
           <div ref={contentRef} className={styles.column} data-sidebar-motion="center">
-            {messages.map((message, index) =>
-              message.role === 'user' ? (
-                <UserMessage
-                  key={message.id}
-                  sessionId={session.id}
-                  message={message}
-                  retryUploadId={uploadRetryId}
-                  isFirst={index === 0}
-                  isLast={index === lastIndex || index === lastIndex - 1}
-                  busy={streaming}
-                  versions={versions.get(message.id) ?? EMPTY_VERSIONS}
-                  onSelectVersion={selectVersion}
-                />
-              ) : (
-                <AssistantMessage
-                  key={message.id}
-                  sessionId={session.id}
-                  message={message}
-                  isLast={index === lastIndex}
-                  streaming={streaming && index === lastIndex}
-                  busy={streaming}
-                  versions={versions.get(message.id) ?? EMPTY_VERSIONS}
-                  onSelectVersion={selectVersion}
-                />
+            {start > 0 ? (
+              <Button
+                size="s"
+                variant="outlined"
+                onClick={() => turnPage(Math.max(0, start - MESSAGE_PAGE), true)}
+              >
+                {t('olderMessages')}
+              </Button>
+            ) : null}
+            {viewed.map((message, offset) => {
+              const index = start + offset
+              return (
+                <div key={message.id} data-history-message={message.id} tabIndex={-1}>
+                  {message.role === 'user' ? (
+                    <UserMessage
+                      key={message.id}
+                      sessionId={session.id}
+                      message={message}
+                      retryUploadId={uploadRetryId}
+                      isFirst={index === 0}
+                      isLast={index === lastIndex || index === lastIndex - 1}
+                      busy={streaming}
+                      versions={versions.get(message.id) ?? EMPTY_VERSIONS}
+                      onSelectVersion={selectVersion}
+                    />
+                  ) : (
+                    <AssistantMessage
+                      key={message.id}
+                      sessionId={session.id}
+                      message={message}
+                      isLast={index === lastIndex}
+                      streaming={streaming && index === lastIndex}
+                      busy={streaming}
+                      versions={versions.get(message.id) ?? EMPTY_VERSIONS}
+                      onSelectVersion={selectVersion}
+                    />
+                  )}
+                </div>
               )
-            )}
+            })}
+            {end < messages.length ? (
+              <div className={styles.historyPages}>
+                <Button
+                  size="s"
+                  variant="outlined"
+                  onClick={() => turnPage(Math.min(end, latestStart))}
+                >
+                  {t('newerMessages')}
+                </Button>
+                <Button size="s" variant="outlined" onClick={() => turnPage(null)}>
+                  {t('latestMessages')}
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
         {footer}

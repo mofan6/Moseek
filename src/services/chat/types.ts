@@ -9,7 +9,7 @@ import type {
   StopReason,
   TextCitation,
 } from '../api/types.js'
-import type { ContextMode, ReplyStyle } from '../settings.js'
+import type { ContextMode, ConversationOptions, ReplyStyle } from '../settings.js'
 import type { TokenCounts } from './usage.js'
 
 /**
@@ -88,6 +88,8 @@ export type AssistantMessage = MessageBranch & {
   contextMode?: ContextMode
   /** 本轮生成时选用的风格，续写与重试沿用。 */
   replyStyle?: ReplyStyle
+  /** 本轮发送的会话要点快照。 */
+  notes?: string
   omittedHistoryRounds?: number
   /** 本轮请求的系统信息快照；各回答版本独立保存，续写沿用。历史消息中缺省的快照保持为空。 */
   latestReminder?: string
@@ -102,6 +104,7 @@ export type AssistantMessage = MessageBranch & {
   usage?: MessageUsage
   /** 此回复所有已记录请求的用量，包含续写。 */
   tokenCounts?: TokenCounts
+  usageEntries?: { at: number; counts: TokenCounts }[]
   error?: {
     /** upload：发送前补传附件失败，请求没有发出 */
     kind: ApiErrorKind | 'upload'
@@ -117,6 +120,7 @@ export type Message = UserMessage | AssistantMessage
 
 export type Session = {
   id: string
+  revision?: string
   title: string
   createdAt: number
   updatedAt: number
@@ -124,10 +128,13 @@ export type Session = {
   messages: Message[]
   /** undefined 表示线性消息列表；null 表示空会话。 */
   rootMessageId?: string | null
+  pinned?: boolean
+  options?: Partial<ConversationOptions>
+  notes?: string
 }
 
 /** 会话列表元数据；消息只在打开会话时加载。 */
-export type SessionSummary = Pick<Session, 'id' | 'title' | 'createdAt' | 'updatedAt'>
+export type SessionSummary = Pick<Session, 'id' | 'title' | 'createdAt' | 'updatedAt' | 'pinned'>
 
 /** 显式提取字段，避免将完整会话的消息带进列表。 */
 export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
@@ -135,4 +142,5 @@ export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
   title: session.title,
   createdAt: session.createdAt,
   updatedAt: session.updatedAt,
+  pinned: session.pinned,
 })

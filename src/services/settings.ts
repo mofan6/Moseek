@@ -39,6 +39,16 @@ type Settings = {
   siderCollapsed: boolean
 }
 
+export type ConversationOptions = Pick<
+  Settings,
+  'model' | 'reasoning' | 'search' | 'contextMode' | 'replyStyle'
+>
+
+export const getConversationDefaults = (): ConversationOptions => {
+  const { model, reasoning, search, contextMode, replyStyle } = useSettings.getState()
+  return { model, reasoning, search, contextMode, replyStyle }
+}
+
 const KEYS = {
   apiKey: 'moseek:api-key',
   locale: 'moseek:locale',

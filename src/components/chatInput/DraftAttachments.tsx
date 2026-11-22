@@ -9,7 +9,11 @@ import { FileCard } from '../files/FileCard.js'
 import { useFileView } from '../files/useFileView.js'
 import styles from './ChatInput.module.css'
 
-const UPLOADING: UploadTask = { status: 'uploading' }
+const RESTORED: UploadTask = {
+  status: 'error',
+  error: { key: 'draftAttachmentRestored' },
+  retryable: true,
+}
 
 /** 列表只随草稿附件变化更新；每张卡片独立订阅自己的上传状态。 */
 export const DraftAttachments = memo(function DraftAttachments({
@@ -50,7 +54,7 @@ const AttachmentItem = ({
 }) => {
   const t = useTranslate()
   const { image, url, link } = useFileView(item.file, item.file.name)
-  const task = useUploads((state) => state.tasks[item.id] ?? UPLOADING)
+  const task = useUploads((state) => state.tasks[item.id] ?? RESTORED)
   const status = task.status
   const error = task.status === 'error' ? t(task.error.key, task.error.params) : undefined
   // 过大、格式不支持等重试无效的失败只提示原因，需删除后再发送

@@ -1,6 +1,7 @@
 import { BackupError, fail } from './errors.js'
 import { REASONING_LEVELS } from '../../api/models.js'
-import { CONTEXT_MODES } from '../../settings.js'
+import { CONTEXT_MODES, REPLY_STYLES } from '../../settings.js'
+import type { TokenCounts } from '../usage.js'
 import {
   EXPORT_FORMAT_VERSION,
   type ChatMessage,
@@ -200,9 +201,21 @@ const fragment: Read<Fragment | null> = (value) => {
   }
 }
 
+const readTokenCounts: Read<TokenCounts> = (value) => {
+  const counts = record(value)
+  return {
+    cacheHit: count(counts.cacheHit),
+    cacheMiss: count(counts.cacheMiss),
+    output: count(counts.output),
+    thinking: optionalCount(counts.thinking),
+    safety: optionalCount(counts.safety),
+    searches: optionalCount(counts.searches),
+    fetches: optionalCount(counts.fetches),
+  }
+}
+
 const moseekMetadata: Read<NonNullable<ChatMessage['moseek']>> = (value) => {
   const item = record(value)
-  const counts = item.token_counts === undefined ? undefined : record(item.token_counts)
   const latest = item.latest_usage === undefined ? undefined : record(item.latest_usage)
   return {
     model:
@@ -212,15 +225,17 @@ const moseekMetadata: Read<NonNullable<ChatMessage['moseek']>> = (value) => {
     context_mode:
       item.context_mode === undefined ? undefined : oneOf(...CONTEXT_MODES)(item.context_mode),
     omitted_history_rounds: optionalCount(item.omitted_history_rounds),
-    token_counts: counts && {
-      cacheHit: count(counts.cacheHit),
-      cacheMiss: count(counts.cacheMiss),
-      output: count(counts.output),
-      thinking: optionalCount(counts.thinking),
-      safety: optionalCount(counts.safety),
-      searches: optionalCount(counts.searches),
-      fetches: optionalCount(counts.fetches),
-    },
+    token_counts: item.token_counts === undefined ? undefined : readTokenCounts(item.token_counts),
+    reply_style:
+      item.reply_style === undefined ? undefined : oneOf(...REPLY_STYLES)(item.reply_style),
+    notes: item.notes === undefined ? undefined : string(item.notes).slice(0, 800),
+    usage_entries:
+      item.usage_entries === undefined
+        ? undefined
+        : list((value) => {
+            const entry = record(value)
+            return { at: count(entry.at), counts: readTokenCounts(entry.counts) }
+          })(item.usage_entries),
     latest_usage: latest && {
       input_tokens: count(latest.input_tokens),
       cache_creation_input_tokens: count(latest.cache_creation_input_tokens),
@@ -261,14 +276,16 @@ const sessionId: Read<string> = (value) => {
 }
 
 /** 版本号用于校验归档格式兼容性；字段结构由各字段的校验函数保证。 */
-export const checkManifest = (value: unknown): void => {
-  const version = record(value).export_format_version
+export const checkManifest = (value: unknown): boolean => {
+  const manifest = record(value)
+  const version = manifest.export_format_version
   if (typeof version === 'number' && version > EXPORT_FORMAT_VERSION) {
     fail('backupNewerVersion')
   }
   if (version !== EXPORT_FORMAT_VERSION) {
     fail('backupInvalidVersion')
   }
+  return manifest.moseek_full === true
 }
 
 export const readSessionIndex: Read<SessionIndexEntry[]> = list((value) => {
@@ -276,7 +293,7 @@ export const readSessionIndex: Read<SessionIndexEntry[]> = list((value) => {
   return {
     id: sessionId(item.id),
     title: nullable(string)(item.title),
-    pinned: false,
+    pinned: item.pinned === true,
     message_count: count(item.message_count),
     inserted_at: time(item.inserted_at),
     updated_at: time(item.updated_at),
@@ -285,13 +302,39 @@ export const readSessionIndex: Read<SessionIndexEntry[]> = list((value) => {
 
 export const readSessionFile: Read<SessionFile> = (value) => {
   const item = record(value)
+  const extra = item.moseek === undefined ? undefined : record(item.moseek)
+  const options = extra?.options === undefined ? undefined : record(extra.options)
   return {
     id: sessionId(item.id),
     title: nullable(string)(item.title),
-    pinned: false,
+    pinned: item.pinned === true,
     current_message_id: count(item.current_message_id),
     inserted_at: time(item.inserted_at),
     updated_at: time(item.updated_at),
     messages: list(message)(item.messages),
+    ...(extra
+      ? {
+          moseek: {
+            notes: extra.notes === undefined ? undefined : string(extra.notes).slice(0, 800),
+            options: options
+              ? {
+                  ...(options.model === undefined
+                    ? {}
+                    : { model: oneOf('deepseek-flash', 'deepseek-v4-pro')(options.model) }),
+                  ...(options.reasoning === undefined
+                    ? {}
+                    : { reasoning: oneOf(...REASONING_LEVELS)(options.reasoning) }),
+                  ...(options.search === undefined ? {} : { search: boolean(options.search) }),
+                  ...(options.contextMode === undefined
+                    ? {}
+                    : { contextMode: oneOf(...CONTEXT_MODES)(options.contextMode) }),
+                  ...(options.replyStyle === undefined
+                    ? {}
+                    : { replyStyle: oneOf(...REPLY_STYLES)(options.replyStyle) }),
+                }
+              : undefined,
+          },
+        }
+      : {}),
   }
 }

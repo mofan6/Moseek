@@ -1,6 +1,6 @@
 import { formatDate } from '../../utils/format.js'
 import * as db from './db.js'
-import { replaceHistory, useChatStore } from './store.js'
+import { replaceHistory, useChatStore, waitForHistoryWrites } from './store.js'
 import type { Session } from './types.js'
 
 export { BackupError } from './history/errors.js'
@@ -9,7 +9,9 @@ export { BackupError } from './history/errors.js'
 let backupQueue: Promise<unknown> = Promise.resolve()
 
 const enqueueBackup = <T>(run: () => Promise<T>): Promise<T> => {
-  const task = backupQueue.then(run)
+  const task = backupQueue.then(() =>
+    navigator.locks ? navigator.locks.request('moseek:history-archive', run) : run()
+  )
   backupQueue = task.catch(() => {})
   return task
 }
@@ -17,8 +19,9 @@ const enqueueBackup = <T>(run: () => Promise<T>): Promise<T> => {
 const backupFileName = (date: Date) => `deepseek_data-${formatDate(date)}.zip`
 
 /** 导出为历史会话导出格式的 ZIP，可再次导入。 */
-export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
+export const exportHistory = (full = false): Promise<{ name: string; blob: Blob }> =>
   enqueueBackup(async () => {
+    await waitForHistoryWrites()
     // 列表和已加载内容保留导出开始时的快照；未打开的会话逐条读取，不填满详情缓存。
     const { sessions, sessionCache } = useChatStore.getState()
     async function* readSessions(): AsyncGenerator<Session> {
@@ -35,8 +38,9 @@ export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
     }
     const { exportArchive } = await import('./history/exportArchive.js')
     const now = new Date()
-    const blob = await exportArchive(readSessions())
-    return { name: backupFileName(now), blob }
+    const blob = await exportArchive(readSessions(), full)
+    const name = full ? `moseek-backup-${formatDate(now)}.zip` : backupFileName(now)
+    return { name, blob }
   })
 
 /**

@@ -117,7 +117,10 @@ export async function* readServerSentEvents(
   let finished = false
   try {
     for (;;) {
-      const { done, value } = await reader.read()
+      const { done, value } = await reader.read().catch((error: unknown) => {
+        signal?.throwIfAborted()
+        throw new StreamReadError(error)
+      })
       if (done) {
         finished = true
         yield* decoder.push(textDecoder.decode())
@@ -132,5 +135,11 @@ export async function* readServerSentEvents(
       reader.cancel().catch(() => {})
     }
     reader.releaseLock()
+  }
+}
+
+export class StreamReadError extends Error {
+  constructor(cause: unknown) {
+    super('The response stream disconnected', { cause })
   }
 }

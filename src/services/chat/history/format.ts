@@ -9,7 +9,8 @@
 import type { ReasoningLevel } from '../../api/models.js'
 import type { ChatModel, MessageUsage } from '../../api/types.js'
 import type { TokenCounts } from '../usage.js'
-import type { ContextMode } from '../../settings.js'
+import type { ContextMode, ConversationOptions, ReplyStyle } from '../../settings.js'
+import type { AssistantMessage } from '../types.js'
 
 /** 2026-11-11T02:33:23.270Z */
 export type Iso8601Utc = string
@@ -17,7 +18,7 @@ export type Iso8601Utc = string
 export const EXPORT_FORMAT_VERSION = 3
 
 /** manifest.json，ZIP 的第一个条目 */
-export type Manifest = { export_format_version: typeof EXPORT_FORMAT_VERSION }
+export type Manifest = { export_format_version: typeof EXPORT_FORMAT_VERSION; moseek_full?: true }
 
 /** chat_session_index.json 的一项，只列出成功写出的会话；位于全部会话 JSON 之后、图片之前 */
 export type SessionIndexEntry = {
@@ -40,6 +41,7 @@ export type SessionFile = {
   updated_at: Iso8601Utc
   /** 消息树，分支靠 parent_id */
   messages: ChatMessage[]
+  moseek?: { options?: Partial<ConversationOptions>; notes?: string }
 }
 
 export type ChatRole = 'USER' | 'ASSISTANT'
@@ -74,6 +76,9 @@ export type ChatMessage = {
     token_counts?: TokenCounts
     latest_usage?: MessageUsage
     context_mode?: ContextMode
+    reply_style?: ReplyStyle
+    notes?: string
+    usage_entries?: AssistantMessage['usageEntries']
     omitted_history_rounds?: number
   }
 }
