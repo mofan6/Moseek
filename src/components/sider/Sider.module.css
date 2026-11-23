@@ -15,6 +15,7 @@
   z-index: 21;
   inset-block: 0;
   inset-inline-start: 0;
+  padding-bottom: var(--moseek-corner-clearance);
   transform: translateX(0);
   transition: transform var(--moseek-sidebar-motion);
 
@@ -124,13 +125,8 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  height: 64px;
-  padding-left: 50px;
-}
-
-.mobile .bottom {
   gap: 8px;
-  padding-left: 0;
+  padding: 12px 0;
 }
 
 .settings {
@@ -266,11 +262,6 @@
     padding: 4px 10px 3px;
     font-size: 14px;
     line-height: 22px;
-  }
-
-  .bottom {
-    height: auto;
-    padding: 12px 0;
   }
 
   .settings {

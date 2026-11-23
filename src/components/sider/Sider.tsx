@@ -137,15 +137,17 @@ export const Sider = ({
           ))}
         </div>
       </div>
-      <div className={styles.bottom}>
-        {mobile ? <ThemeToggle /> : null}
-        <button type="button" className={styles.settings} onClick={() => openSettings('general')}>
-          <span className={styles.settingsIcon}>
-            <IconSettingsOutline16 />
-          </span>
-          <span className={styles.settingsLabel}>{t('settings')}</span>
-        </button>
-      </div>
+      {mobile ? (
+        <div className={styles.bottom}>
+          <ThemeToggle />
+          <button type="button" className={styles.settings} onClick={() => openSettings('general')}>
+            <span className={styles.settingsIcon}>
+              <IconSettingsOutline16 />
+            </span>
+            <span className={styles.settingsLabel}>{t('settings')}</span>
+          </button>
+        </div>
+      ) : null}
       {deleting ? (
         <Modal
           title={t('deleteSessionModalContentTitle')}
