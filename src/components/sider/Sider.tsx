@@ -31,7 +31,7 @@ export const Sider = ({
 }: {
   mobile?: boolean
   collapsed?: boolean
-  onCollapse?: MouseEventHandler<HTMLButtonElement>
+  onCollapse?: MouseEventHandler<HTMLElement>
 }) => {
   const t = useTranslate()
   const sessions = useChatStore((state) => state.sessions)
@@ -111,9 +111,9 @@ export const Sider = ({
       <button
         type="button"
         className={styles.newChat}
-        onClick={() => {
+        onClick={(event) => {
           newChat()
-          closeMobileSider()
+          onCollapse(event)
         }}
       >
         <span className={styles.newChatIcon}>
@@ -131,6 +131,7 @@ export const Sider = ({
                   key={session.id}
                   session={session}
                   active={session.id === activeId}
+                  onSelect={onCollapse}
                   onDelete={setDeleting}
                 />
               ))}

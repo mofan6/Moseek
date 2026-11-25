@@ -1,6 +1,5 @@
 .overlay {
   --overlay-opacity: 0.36;
-  --moseek-settings-wash: 54%;
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -12,7 +11,6 @@
 
   [data-ds-dark-theme] & {
     --overlay-opacity: 0.6;
-    --moseek-settings-wash: 64%;
   }
 
   &:not([data-frosted-overlay]) {
@@ -20,9 +18,19 @@
   }
 
   &[data-frosted-overlay] {
+    --moseek-settings-wash: 32%;
+    --moseek-frosted-density: 58%;
+    --moseek-frosted-blur: 22px;
     background-color: color-mix(
       in srgb, var(--dsw-alias-bg-base) var(--moseek-settings-wash), transparent
     );
+    /* Animating the overlay's opacity limits the dialog's backdrop to the overlay itself. */
+    animation-name: frosted-overlay-in;
+  }
+
+  [data-ds-dark-theme] &[data-frosted-overlay] {
+    --moseek-settings-wash: 42%;
+    --moseek-frosted-density: 66%;
   }
 }
 
@@ -61,6 +69,10 @@
 
 @keyframes overlay-in {
   from { opacity: 0; }
+}
+
+@keyframes frosted-overlay-in {
+  from { background-color: transparent; }
 }
 
 @keyframes modal-in {

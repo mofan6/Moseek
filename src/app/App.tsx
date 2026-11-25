@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, type MouseEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { useTranslate } from '../i18n/index.js'
-import { setSiderCollapsed, useSettings } from '../services/settings.js'
+import { useSettings } from '../services/settings.js'
 import { useIsMobile, useMobileViewport, usePreventPageScroll } from './viewport.js'
 import {
   bindChatPersistence,
@@ -35,7 +35,7 @@ export const App = () => {
   const isMobile = useIsMobile()
   const locale = useSettings((state) => state.locale)
   // 移动端侧边栏以独立抽屉管理开合状态
-  const siderCollapsed = useSettings((state) => state.siderCollapsed) && !isMobile
+  const [siderCollapsed, setSiderCollapsed] = useState(true)
   const ready = useChatStore((state) => state.ready)
   const initError = useChatStore((state) => state.initError)
   const saveError = useChatStore((state) => Object.values(state.sessionSaveErrors).some(Boolean))
@@ -57,10 +57,10 @@ export const App = () => {
 
   usePreventPageScroll(isMobile)
 
-  const toggleSidebar = (event: MouseEvent<HTMLButtonElement>) => {
+  const toggleSidebar = useCallback((event: MouseEvent<HTMLElement>) => {
     restoreSidebarFocus.current = event.detail === 0
-    setSiderCollapsed(!siderCollapsed)
-  }
+    setSiderCollapsed((collapsed) => !collapsed)
+  }, [])
 
   useLayoutEffect(() => {
     if (restoreSidebarFocus.current) {

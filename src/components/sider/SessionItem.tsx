@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { memo, useState } from 'react'
+import { memo, useState, type MouseEventHandler } from 'react'
 import { useTranslate } from '../../i18n/index.js'
 import {
   IconCheckOutline16,
@@ -11,16 +11,17 @@ import { renameSession, selectSession, toggleSessionPin } from '../../services/c
 import type { SessionSummary } from '../../services/chat/types.js'
 import { IconButton } from '../base/IconButton.js'
 import { Menu } from '../base/Menu.js'
-import { closeMobileSider } from './mobileSiderState.js'
 import styles from './SessionItem.module.css'
 
 export const SessionItem = memo(function SessionItem({
   session,
   active,
+  onSelect,
   onDelete,
 }: {
   session: SessionSummary
   active: boolean
+  onSelect: MouseEventHandler<HTMLDivElement>
   onDelete: (session: SessionSummary) => void
 }) {
   const t = useTranslate()
@@ -55,9 +56,9 @@ export const SessionItem = memo(function SessionItem({
   return (
     <div
       className={clsx(styles.item, active && styles.active)}
-      onClick={() => {
+      onClick={(event) => {
         selectSession(session.id)
-        closeMobileSider()
+        onSelect(event)
       }}
     >
       <div className={styles.title}>{displayTitle}</div>

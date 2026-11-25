@@ -36,7 +36,6 @@ type Settings = {
   search: boolean
   contextMode: ContextMode
   replyStyle: ReplyStyle
-  siderCollapsed: boolean
 }
 
 export type ConversationOptions = Pick<
@@ -63,7 +62,6 @@ const KEYS = {
   search: 'moseek:search',
   contextMode: 'moseek:context-mode',
   replyStyle: 'moseek:reply-style',
-  siderCollapsed: 'moseek:sider-collapsed',
 } as const
 
 const read = (key: string) => {
@@ -150,7 +148,6 @@ export const useSettings = create<Settings>(() => ({
   search: read(KEYS.search) === 'true',
   contextMode: readChoice(KEYS.contextMode, CONTEXT_MODES),
   replyStyle: readChoice(KEYS.replyStyle, REPLY_STYLES),
-  siderCollapsed: read(KEYS.siderCollapsed) === 'true',
 }))
 
 export const setLocale = (locale: Locale) => {
@@ -215,9 +212,4 @@ export const setContextMode = (contextMode: ContextMode) => {
 export const setReplyStyle = (replyStyle: ReplyStyle) => {
   write(KEYS.replyStyle, replyStyle)
   useSettings.setState({ replyStyle })
-}
-
-export const setSiderCollapsed = (siderCollapsed: boolean) => {
-  write(KEYS.siderCollapsed, String(siderCollapsed))
-  useSettings.setState({ siderCollapsed })
 }
