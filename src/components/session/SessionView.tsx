@@ -28,9 +28,7 @@ export const SessionView = memo(function SessionView({
         />
       ) : (
         <div className={styles.header}>
-          <div className={styles.title} data-sidebar-motion="left">
-            {title}
-          </div>
+          <div className={styles.title}>{title}</div>
           <ConversationTools key={session.id} session={session} />
         </div>
       )}
@@ -39,7 +37,7 @@ export const SessionView = memo(function SessionView({
         session={session}
         streaming={streaming}
         footer={
-          <div className={styles.inputContainer} data-sidebar-motion="center">
+          <div className={styles.inputContainer}>
             <ChatInput sessionId={session.id} />
           </div>
         }

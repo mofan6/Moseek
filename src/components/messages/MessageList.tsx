@@ -295,7 +295,7 @@ export const MessageList = ({
           role="region"
           aria-label={t('conversationMessages')}
         >
-          <div ref={contentRef} className={styles.column} data-sidebar-motion="center">
+          <div ref={contentRef} className={styles.column}>
             {start > 0 ? (
               <Button
                 size="s"

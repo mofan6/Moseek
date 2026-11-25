@@ -10,8 +10,12 @@
   align-items: center;
   flex-shrink: 0;
   height: 60px;
-  padding: 12px 18px 0;
+  padding: 12px 18px 0 131px;
   box-sizing: border-box;
+}
+
+:global([data-sidebar-expanded]) .header {
+  padding-inline-start: calc(var(--moseek-sidebar-width) + 18px);
 }
 
 .title {
@@ -24,10 +28,6 @@
   color: var(--dsw-alias-label-primary);
 }
 
-:global([data-sidebar-collapsed]) .title {
-  margin-inline-start: 113px;
-}
-
 .inputContainer {
   display: flex;
   flex-shrink: 0;
@@ -35,7 +35,7 @@
   align-items: center;
   box-sizing: border-box;
   width: calc(var(--message-list-max-width) - 64px);
-  max-width: calc(100% - 32px);
+  max-width: calc(100% - 120px);
   margin: 0 auto;
   padding-bottom: 18px;
 
@@ -44,12 +44,9 @@
   }
 }
 
-:global([data-sidebar-collapsed]) .inputContainer {
-  max-width: calc(100% - 120px);
-}
-
 @media not all and (min-width: 768px) {
   .inputContainer {
+    max-width: calc(100% - 32px);
     padding-bottom: var(--app-composer-bottom, max(12px, env(safe-area-inset-bottom)));
   }
 }

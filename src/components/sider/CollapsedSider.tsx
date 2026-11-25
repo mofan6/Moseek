@@ -18,7 +18,6 @@ export const CollapsedSider = ({
   return (
     <div
       className={styles.collapsed}
-      data-sidebar-motion="left"
       data-visible={visible || undefined}
       {...(visible ? {} : { inert: '' })}
     >
