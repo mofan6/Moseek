@@ -38,6 +38,10 @@
   max-width: calc(100% - 32px);
   margin: 0 auto;
   padding-bottom: 18px;
+
+  > [data-frosted-surface], button {
+    pointer-events: auto;
+  }
 }
 
 :global([data-sidebar-collapsed]) .inputContainer {

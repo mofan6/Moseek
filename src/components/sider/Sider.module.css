@@ -1,4 +1,5 @@
 .sider {
+  --moseek-frosted-card: var(--dsw-specific-sidebar-fill);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -6,8 +7,9 @@
   width: var(--moseek-sidebar-width);
   height: 100%;
   padding: 12px 14px 0;
-  border-right: 1px solid var(--dsw-alias-border-l1);
-  background-color: var(--moseek-glass-rail);
+  border-inline-end: 1px solid var(--moseek-frosted-border);
+  border-start-end-radius: 16px;
+  border-end-end-radius: 16px;
 }
 
 .sider:not(.mobile) {
@@ -215,7 +217,6 @@
   bottom: 0;
   left: 0;
   z-index: 800;
-  box-shadow: 12px 0 42px rgb(var(--moseek-shadow-ink) / 19%);
   transform: translateX(-100%);
   visibility: hidden;
   transition: transform var(--moseek-sidebar-motion), visibility var(--moseek-sidebar-duration);
@@ -252,7 +253,6 @@
 .mobile {
   width: 300px;
   max-width: calc(100vw - 48px);
-  background-color: var(--dsw-specific-sidebar-fill);
 
   .listWrap {
     margin-top: 16px;

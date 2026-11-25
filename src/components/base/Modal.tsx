@@ -15,6 +15,7 @@ export const Modal = ({
   children,
   footer,
   closable = false,
+  frosted = false,
   className,
   mainClassName,
   onClose,
@@ -24,6 +25,7 @@ export const Modal = ({
   footer?: ReactNode
   /** 标题栏右侧显示关闭按钮 */
   closable?: boolean
+  frosted?: boolean
   className?: string
   /** 内容区的 class */
   mainClassName?: string
@@ -51,10 +53,12 @@ export const Modal = ({
   return createPortal(
     <div
       className={styles.overlay}
+      data-frosted-overlay={frosted || undefined}
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <div
         className={clsx(styles.content, className)}
+        data-frosted-surface={frosted || undefined}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

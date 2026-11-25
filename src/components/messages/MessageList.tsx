@@ -50,6 +50,7 @@ export const MessageList = ({
   const t = useTranslate()
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const footerRef = useRef<HTMLDivElement>(null)
   const scrollMode = useRef<'tail' | 'paused' | 'manual' | 'answer'>('tail')
   const scrollTopRef = useRef(0)
   const streamHadAnswer = useRef<boolean | null>(null)
@@ -140,22 +141,29 @@ export const MessageList = ({
       return
     }
     const offset = anchor.element.getBoundingClientRect().top - content.getBoundingClientRect().top
-    const minHeight = Math.max(0, Math.ceil(offset + scroll.clientHeight - ANSWER_TOP_GAP))
+    const visibleHeight = scroll.clientHeight - (footerRef.current?.offsetHeight ?? 0)
+    const minHeight = Math.max(0, Math.ceil(offset + visibleHeight - ANSWER_TOP_GAP))
     content.style.minHeight = `${minHeight}px`
   }, [])
 
   useLayoutEffect(() => {
     const content = contentRef.current
     const scroll = scrollRef.current
-    if (!content || !scroll) {
+    const footerElement = footerRef.current
+    if (!content || !scroll || !footerElement) {
       return
     }
-    const observer = new ResizeObserver(() => {
+    const sync = () => {
+      // 遮住的区域仍可滚动，到底时把最后一条消息留在输入框上方。
+      scroll.style.setProperty('--message-footer-space', `${footerElement.offsetHeight}px`)
       reserveAnswerSpace()
       scrollToBottom()
-    })
+    }
+    sync()
+    const observer = new ResizeObserver(sync)
     observer.observe(content)
     observer.observe(scroll)
+    observer.observe(footerElement)
     return () => observer.disconnect()
   }, [reserveAnswerSpace, scrollToBottom])
 
@@ -344,7 +352,9 @@ export const MessageList = ({
             ) : null}
           </div>
         </div>
-        {footer}
+        <div className={styles.footer} ref={footerRef}>
+          {footer}
+        </div>
       </div>
     </MessageScrollContext.Provider>
   )

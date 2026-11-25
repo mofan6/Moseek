@@ -4,11 +4,14 @@ body {
   --moseek-atmosphere-top: hsl(var(--moseek-atmosphere-ink) 98%);
   --moseek-atmosphere-base: hsl(var(--moseek-atmosphere-ink) 94%);
   --moseek-atmosphere-light: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 38%) 81% / 36%);
-  --moseek-glass-input: var(--dsw-specific-input-major);
   --moseek-glass-rail: var(--dsw-specific-sidebar-fill);
   --moseek-glass-float: var(--dsw-alias-bg-layer-3);
   --moseek-glass-edge: rgb(255 255 255 / 78%);
   --moseek-glass-sheen: rgb(255 255 255 / 65%);
+  --moseek-frosted-density: 12%;
+  --moseek-frosted-border: var(--dsw-alias-border-l2);
+  --moseek-frosted-rim: rgb(255 255 255 / 85%);
+  --moseek-frosted-shadow: rgb(var(--moseek-shadow-ink) / 17%);
 }
 
 body[data-ds-dark-theme] {
@@ -17,18 +20,58 @@ body[data-ds-dark-theme] {
   --moseek-atmosphere-light: hsl(var(--moseek-atmosphere-hue) var(--palette-accent, 38%) 38% / 46%);
   --moseek-glass-edge: rgb(255 255 255 / 13%);
   --moseek-glass-sheen: rgb(255 255 255 / 10%);
+  --moseek-frosted-density: 20%;
+  --moseek-frosted-rim: rgb(255 255 255 / 13%);
+  --moseek-frosted-shadow: rgb(0 0 0 / 47%);
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   body {
-    --moseek-glass-input: hsl(var(--moseek-atmosphere-ink) 99% / 65%);
     --moseek-glass-rail: hsl(var(--moseek-atmosphere-ink) 95% / 65%);
     --moseek-glass-float: hsl(var(--moseek-atmosphere-ink) 99% / 91%);
   }
 
   body[data-ds-dark-theme] {
-    --moseek-glass-input: hsl(var(--moseek-atmosphere-ink) 18% / 72%);
     --moseek-glass-rail: hsl(var(--moseek-atmosphere-ink) 12% / 71%);
     --moseek-glass-float: hsl(var(--moseek-atmosphere-ink) 18% / 91%);
+  }
+}
+
+[data-frosted-surface] {
+  background-color: var(--moseek-frosted-card);
+  box-shadow:
+    inset 0 1px var(--moseek-frosted-rim),
+    0 3px 8px -4px var(--moseek-frosted-shadow),
+    0 16px 36px -9px var(--moseek-frosted-shadow);
+}
+
+@supports (color: color-mix(in srgb, black, transparent)) {
+  body {
+    --moseek-frosted-border: color-mix(
+      in srgb, var(--dsw-alias-brand-primary) 20%, var(--dsw-alias-border-l2)
+    );
+  }
+
+  body[data-ds-dark-theme] {
+    --moseek-frosted-border: color-mix(in srgb, var(--dsw-alias-brand-primary) 28%, transparent);
+  }
+
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    [data-frosted-surface] {
+      background-color: color-mix(
+        in srgb, var(--moseek-frosted-card) var(--moseek-frosted-density), transparent
+      );
+      -webkit-backdrop-filter: blur(5px) saturate(120%);
+      backdrop-filter: blur(5px) saturate(120%);
+    }
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  [data-frosted-surface] {
+    background-color: var(--moseek-frosted-card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 }

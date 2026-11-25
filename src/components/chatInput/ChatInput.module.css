@@ -1,6 +1,7 @@
 .wrapper {
   --line-height: 24px;
   --input-padding-top: 12px;
+  --moseek-frosted-card: var(--dsw-specific-input-major);
   container: composer / inline-size;
   display: flex;
   flex-direction: column;
@@ -10,45 +11,14 @@
   font-size: 16px;
   line-height: var(--line-height);
   border-radius: 16px;
-  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
-  background:
-    linear-gradient(117deg, transparent 18%, var(--moseek-glass-sheen) 43%, transparent 64%) 100%
-      50% / 190% 100% no-repeat,
-    var(--moseek-glass-input);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  border: 1px solid var(--moseek-frosted-border);
   overflow: hidden;
-  transition:
-    background-position 640ms var(--ds-ease-in-out),
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-position: 62% 50%;
-    }
-  }
+  transition: border-color 160ms ease;
 
   &:focus-within {
-    background-position: 8% 50%;
     border-color: var(--dsw-alias-button-ghost-active-border);
-    box-shadow:
-      inset 0 1px 0 var(--moseek-glass-edge),
-      0 0 0 3px var(--dsw-alias-button-ghost-active-fill);
+    outline: 2px solid var(--dsw-alias-button-ghost-active-fill);
   }
-}
-
-.session {
-  box-shadow:
-    inset 0 1px 0 var(--moseek-glass-edge),
-    0 4px 14px rgb(var(--moseek-shadow-ink) / 6%),
-    0 1px 3px rgb(var(--moseek-shadow-ink) / 4%);
-}
-
-.home {
-  box-shadow:
-    inset 0 1px 0 var(--moseek-glass-edge),
-    0 18px 52px rgb(var(--moseek-shadow-ink) / 12%);
 }
 
 .attachments {

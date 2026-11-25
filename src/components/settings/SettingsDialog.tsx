@@ -74,6 +74,7 @@ const SettingsContent = () => {
       <Modal
         title={t('settings')}
         closable
+        frosted
         className={styles.dialog}
         mainClassName={styles.dialogMain}
         onClose={() => {

@@ -79,6 +79,7 @@ export const Sider = ({
     <div
       id={mobile ? undefined : DESKTOP_SIDER_ID}
       className={clsx(styles.sider, mobile && styles.mobile)}
+      data-frosted-surface=""
       data-collapsed={collapsed || undefined}
       {...(collapsed ? { inert: '' } : {})}
     >

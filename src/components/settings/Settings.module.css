@@ -4,6 +4,7 @@
   height: 580px;
   max-height: calc(100dvh - 32px);
   padding: 19px 24px 22px;
+  border-radius: 20px;
 }
 
 .dialogMain {

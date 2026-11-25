@@ -1,5 +1,6 @@
 .overlay {
   --overlay-opacity: 0.36;
+  --moseek-settings-wash: 54%;
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -7,11 +8,21 @@
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, var(--overlay-opacity));
-  backdrop-filter: blur(2px);
   animation: overlay-in 160ms ease both;
 
   [data-ds-dark-theme] & {
     --overlay-opacity: 0.6;
+    --moseek-settings-wash: 64%;
+  }
+
+  &:not([data-frosted-overlay]) {
+    backdrop-filter: blur(2px);
+  }
+
+  &[data-frosted-overlay] {
+    background-color: color-mix(
+      in srgb, var(--dsw-alias-bg-base) var(--moseek-settings-wash), transparent
+    );
   }
 }
 
@@ -26,18 +37,26 @@
   font-size: 14px;
   line-height: 22px;
   color: var(--dsw-alias-label-primary);
-  background:
-    linear-gradient(148deg, var(--moseek-glass-sheen), transparent 46%),
-    var(--moseek-glass-float);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
   animation: modal-in 200ms var(--ds-ease-in-out) both;
-  box-shadow:
-    inset 0 1px 0 var(--moseek-glass-edge),
-    inset 0 0 0 1px var(--dsw-alias-border-inverted),
-    0 0 1px 0 rgba(0, 0, 0, 0.2),
-    0 0 4px 0 rgba(0, 0, 0, 0.02),
-    0 12px 32px 0 rgba(0, 0, 0, 0.08);
+
+  &[data-frosted-surface] {
+    --moseek-frosted-card: var(--dsw-alias-bg-layer-3);
+    border: 1px solid var(--moseek-frosted-border);
+  }
+
+  &:not([data-frosted-surface]) {
+    background:
+      linear-gradient(148deg, var(--moseek-glass-sheen), transparent 46%),
+      var(--moseek-glass-float);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+    box-shadow:
+      inset 0 1px 0 var(--moseek-glass-edge),
+      inset 0 0 0 1px var(--dsw-alias-border-inverted),
+      0 0 1px 0 rgba(0, 0, 0, 0.2),
+      0 0 4px 0 rgba(0, 0, 0, 0.02),
+      0 12px 32px 0 rgba(0, 0, 0, 0.08);
+  }
 }
 
 @keyframes overlay-in {
