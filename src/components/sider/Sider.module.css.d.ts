@@ -9,9 +9,6 @@ declare const styles: {
   readonly "section": string;
   readonly "sectionHeader": string;
   readonly "bottom": string;
-  readonly "settings": string;
-  readonly "settingsIcon": string;
-  readonly "settingsLabel": string;
   readonly "collapsed": string;
   readonly "collapsedGroup": string;
   readonly "drawer": string;

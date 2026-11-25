@@ -15,12 +15,9 @@ import { SessionView } from '../components/session/SessionView.js'
 import { MobileHeader } from '../components/session/MobileHeader.js'
 import { Welcome } from '../components/session/Welcome.js'
 import { SettingsDialog } from '../components/settings/SettingsDialog.js'
-import { openSettings } from '../components/settings/settingsDialogState.js'
+import { SettingsShortcuts } from '../components/settings/SettingsShortcuts.js'
 import { Toast } from '../components/base/Toast.js'
-import { CornerButton } from '../components/base/CornerButton.js'
-import { IconSettingsOutline16 } from '../components/base/icons.js'
 import { WorkspaceDialogs } from '../components/workspace/WorkspaceDialogs.js'
-import { ThemeToggle } from '../components/base/ThemeToggle.js'
 import { showToast } from '../components/base/toastState.js'
 import { onUploadNotice } from '../services/attachments.js'
 import { Button } from '../components/base/Button.js'
@@ -158,14 +155,15 @@ export const App = () => {
           </div>
         </main>
         <SearchPanel />
-        <div className={styles.cornerShortcuts}>
-          {isMobile ? null : <ThemeToggle />}
-          <CornerButton
-            icon={<IconSettingsOutline16 />}
-            label={t('settings')}
-            onClick={() => openSettings('general')}
-          />
-        </div>
+        {!isMobile ? (
+          <div
+            className={styles.cornerShortcuts}
+            data-visible={siderCollapsed || undefined}
+            {...(siderCollapsed ? {} : { inert: '' })}
+          >
+            <SettingsShortcuts />
+          </div>
+        ) : null}
       </div>
       <SettingsDialog />
       <WorkspaceDialogs />

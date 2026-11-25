@@ -1,5 +1,4 @@
 .frame {
-  --moseek-corner-clearance: 64px;
   --moseek-sidebar-width: 246px;
   --moseek-sidebar-duration: 260ms;
   --moseek-sidebar-motion: var(--moseek-sidebar-duration) var(--ds-ease-in-out);
@@ -71,11 +70,18 @@
 
 .cornerShortcuts {
   position: absolute;
-  z-index: 30;
+  z-index: 20;
   inset-block-end: 11px;
   inset-inline-start: 14px;
   display: flex;
   gap: 8px;
+  opacity: 0;
+
+  &[data-visible] {
+    opacity: 1;
+    transition: opacity min(120ms, var(--moseek-sidebar-duration)) ease
+      min(100ms, var(--moseek-sidebar-duration));
+  }
 }
 
 .content {
@@ -117,10 +123,6 @@
 }
 
 @media (min-width: 768px) and (max-width: 999px) {
-  .frame {
-    --moseek-corner-clearance: 114px;
-  }
-
   .cornerShortcuts {
     flex-direction: column-reverse;
   }
@@ -128,8 +130,6 @@
 
 @media not all and (min-width: 768px) {
   .frame {
-    --moseek-mobile-corner-bottom: max(8px, env(safe-area-inset-bottom));
-    --app-composer-bottom: calc(var(--moseek-mobile-corner-bottom) + 50px);
     position: fixed;
     top: var(--app-viewport-top, 0px);
     bottom: auto;
@@ -137,14 +137,6 @@
 
     &[data-keyboard-open] {
       --app-composer-bottom: 6px;
-
-      .cornerShortcuts {
-        display: none;
-      }
     }
-  }
-
-  .cornerShortcuts {
-    inset-block-end: var(--moseek-mobile-corner-bottom);
   }
 }

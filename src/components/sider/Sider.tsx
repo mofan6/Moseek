@@ -4,7 +4,6 @@ import { useTranslate } from '../../i18n/index.js'
 import {
   IconPanelLeftOutline16,
   IconSearchOutline16,
-  IconSettingsOutline16,
   NewChatIcon,
 } from '../base/icons.js'
 import { groupSessions } from '../../services/chat/sessionGroups.js'
@@ -12,10 +11,9 @@ import { newChat, removeSession, useChatStore } from '../../services/chat/store.
 import type { SessionSummary } from '../../services/chat/types.js'
 import { Button } from '../base/Button.js'
 import { IconButton } from '../base/IconButton.js'
-import { ThemeToggle } from '../base/ThemeToggle.js'
 import { Modal } from '../base/Modal.js'
 import { showToast } from '../base/toastState.js'
-import { openSettings } from '../settings/settingsDialogState.js'
+import { SettingsShortcuts } from '../settings/SettingsShortcuts.js'
 import { closeMobileSider, useMobileSider } from './mobileSiderState.js'
 import { SessionItem } from './SessionItem.js'
 import { openWorkspace } from '../workspace/workspaceState.js'
@@ -139,17 +137,9 @@ export const Sider = ({
           ))}
         </div>
       </div>
-      {mobile ? (
-        <div className={styles.bottom}>
-          <ThemeToggle />
-          <button type="button" className={styles.settings} onClick={() => openSettings('general')}>
-            <span className={styles.settingsIcon}>
-              <IconSettingsOutline16 />
-            </span>
-            <span className={styles.settingsLabel}>{t('settings')}</span>
-          </button>
-        </div>
-      ) : null}
+      <div className={styles.bottom}>
+        <SettingsShortcuts />
+      </div>
       {deleting ? (
         <Modal
           title={t('deleteSessionModalContentTitle')}
